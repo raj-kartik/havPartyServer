@@ -1,16 +1,27 @@
-const express = require('express');
+import dotenv from 'dotenv';
+dotenv.config();
+import express from 'express';
+import userRoute from './routes/user.js';
+import mongoose from 'mongoose';
 
-const app = express()
-const PORT = 8000
+const app = express();
+const port = process.env.PORT || 3000;
 
-app.get('/', (req, res) => {
-  res.send('Hello World')
-})
+app.use(express.json());
 
-app.get('/about', (req, res) => {
-  res.send('About route 🎉 ')
-})
+console.log('MONGO_URL:', process.env.MONGO_URL);
 
-app.listen(PORT, () => {
-  console.log(`✅ Server is running on port ${PORT}`);
-})
+mongoose.connect(process.env.MONGO_URL)
+.then(() => console.log('Connected to MongoDB'))
+.catch((error) => console.error('MongoDB connection error:', error));
+
+// Define routes
+app.get("/", (req, res) => {
+    res.send("This is hav Party");
+});
+
+app.use('/auth', userRoute);
+
+app.listen(port, () => {
+    console.log("-- listening on PORT", port);
+});
