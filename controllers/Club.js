@@ -7,7 +7,8 @@ export const ClubI = async (req, res) => {
     req.body;
   try {
     const club = new Club({
-      name,
+      owner,
+      club,
       location,
       city,
       state,
@@ -15,6 +16,7 @@ export const ClubI = async (req, res) => {
       menu,
       price,
       pincode,
+      license
     });
     if (club) {
       await club.save();

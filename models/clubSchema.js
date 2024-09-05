@@ -53,6 +53,14 @@ const ClubSchema = new Schema({
       type: [String],
       default: []
     },
+    license:{
+      type:String,
+      require:true
+    },
+    owner:{
+      type:String,
+      require:true
+    }
   }
 });
 
