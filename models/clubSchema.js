@@ -7,44 +7,52 @@ const ClubSchema = new Schema({
     required: true,
   },
   location: {
-    required: true,
     type: String,
+    required: true,
   },
   city: {
-    required: true,
     type: String,
+    required: true,
   },
   state: {
-    required: true,
     type: String,
+    required: true,
   },
   pincode: {
     type: Number,
     required: true,
   },
-//   photos: [],
+  photos: {
+    type: [String],
+    default: []
+  },
   offers: [
     {
       offer: {
-        type: String
+        type: String,
+        required: true,
       },
     },
   ],
-  price:[
-    {
-        single:{
-            type:Number,
-            require:true
-        },
-        couple:{
-            type:Number,
-            require:true
-        },
-    }
-  ],
-  menu:{
-    drink:[],
-    foods:[],
+  price: {
+    single: {
+      type: Number,
+      required: true,
+    },
+    couple: {
+      type: Number,
+      required: true,
+    },
+  },
+  menu: {
+    drinks: {
+      type: [String], 
+      default: []
+    },
+    foods: {
+      type: [String],
+      default: []
+    },
   }
 });
 
