@@ -17,7 +17,7 @@ mongoose.connect(process.env.MONGO_URL)
 
 // Define routes
 app.get("/", (req, res) => {
-    res.send("<h1>Hello, Express.js Server!</h1>");
+    res.send("I have connected to vercel");
 });
 
 app.use('/auth', userRoute);
