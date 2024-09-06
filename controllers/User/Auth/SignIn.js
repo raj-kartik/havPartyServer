@@ -1,5 +1,5 @@
 import axios from "axios";
-import User from "../../models/userSchema.js";
+import User from "../../../models/User/userSchema.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 

@@ -1,8 +1,6 @@
-import mongoose from "mongoose";
-import axios from "axios";
-import Club from "../models/clubSchema.js";
+import Club from "../../../models/Partner/Club/clubSchema.js";
 
-export const ClubI = async (req, res) => {
+export const Club = async (req, res) => {
   const { name, location, city, state, photos, menu, price, pincode } =
     req.body;
   try {
