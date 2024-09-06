@@ -1,8 +1,9 @@
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
-import userRoute from "./routes/user.js";
+import userRoute from "./routes/User/user.js";
 import mongoose from "mongoose";
+import { verifyToken } from "./middlewares/middlware.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
