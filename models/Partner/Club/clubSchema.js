@@ -7,20 +7,25 @@ const ClubSchema = new Schema({
     required: true,
   },
   location: {
-    type: String,
-    required: true,
-  },
-  city: {
-    type: String,
-    required: true,
-  },
-  state: {
-    type: String,
-    required: true,
-  },
-  pincode: {
-    type: Number,
-    required: true,
+    address1:{
+      type: String,
+      required: true,
+    },
+    address2:{
+      type:String
+    },
+    city: {
+      type: String,
+      required: true,
+    },
+    state: {
+      type: String,
+      required: true,
+    },
+    pincode: {
+      type: Number,
+      required: true,
+    },
   },
   photos: {
     type: [String],
@@ -65,4 +70,4 @@ const ClubSchema = new Schema({
 });
 
 const Club = mongoose.model('Club', ClubSchema);
-export default Club
+export default Club;
