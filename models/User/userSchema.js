@@ -47,6 +47,13 @@ const userSchema = new Schema({
       default: [],
     },
   ],
+  friendRequest: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Friend",
+      default: [],
+    },
+  ],
 });
 
 const User = mongoose.model("User", userSchema);
