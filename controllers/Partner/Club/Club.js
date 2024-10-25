@@ -1,18 +1,18 @@
 import Club from "../../../models/Partner/Club/clubSchema.js";
 
 export const Club = async (req, res) => {
+  const { name, location, city, state, photos, menu, price, pincode } =
+    req.body;
 
-  const { name, location, city, state, photos, menu, price, pincode } = req.body;
+  if (!name && !location) {
+    return res.status(400).json({ message: "Name and Location are required." });
+  }
+  if (!pincode) {
+    return res.status(400).json({ message: "Pincode is required." });
+  }
 
-  if(!name&&!location){
-    return res.status(400).json({message:"Name and Location are required."})
-  }
-  if(!pincode){
-    return res.status(400).json({message:"Pincode is required."})
-  }
-  
-  const club = await Club.findOne()
-  
+  const club = await Club.findOne();
+
   try {
     const club = new Club({
       owner,
@@ -24,13 +24,13 @@ export const Club = async (req, res) => {
       menu,
       price,
       pincode,
-      license
+      license,
     });
     if (club) {
       await club.save();
       res.status(200).json({
         message: "Welcome to Hook",
-        state:200,
+        state: 200,
         name,
         location,
         city,

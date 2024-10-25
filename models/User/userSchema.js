@@ -42,7 +42,7 @@ const userSchema = new Schema({
   },
   friendList: [
     {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Friend",
       default: [],
     },
@@ -51,6 +51,13 @@ const userSchema = new Schema({
     {
       type: Schema.Types.ObjectId,
       ref: "Friend",
+      default: [],
+    },
+  ],
+  bookingHistory: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "UserBookingHistory",
       default: [],
     },
   ],
