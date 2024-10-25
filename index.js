@@ -1,9 +1,11 @@
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
-import userRoute from "./routes/User/user.js";
+import userRoute from "./routes/User/Auth/user.js";
 import mongoose from "mongoose";
 import { verifyToken } from "./middlewares/middlware.js";
+import user from './routes/User/index.js'
+import partner from './routes/Partner/index.js'
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -44,7 +46,8 @@ app.get("/", (req, res) => {
   res.send("This is hav Party");
 });
 
-app.use("/auth", userRoute);
+app.use("/api/v1/user", user);
+app.use("/api/v1/partner", partner);
 
 app.listen(port, () => {
   console.log("-- listening on PORT", port);

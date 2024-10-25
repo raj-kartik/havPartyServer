@@ -1,0 +1,47 @@
+import mongoose, { Schema } from "mongoose";
+
+const ownerSchema = new Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  contact_number: {
+    type: String,
+    required: true,
+  },
+  clubs_owned: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Club",
+    },
+  ],
+  partners: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Partner",
+    },
+  ],
+  registration_date: {
+    type: Date,
+    default: Date.now,
+  },
+  active: {
+    type: Boolean,
+    default: true,
+  },
+  transactions: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Ticket", // Reference to the Ticket model
+    },
+  ],
+});
+
+const Owner = mongoose.model("Owner", ownerSchema);
+
+export default Owner;

@@ -7,12 +7,13 @@ const ClubSchema = new Schema({
     required: true,
   },
   location: {
-    address1:{
+    address1: {
       type: String,
       required: true,
     },
-    address2:{
-      type:String
+    address2: {
+      type: String,
+      default: "", // Default to an empty string for consistency
     },
     city: {
       type: String,
@@ -29,7 +30,7 @@ const ClubSchema = new Schema({
   },
   photos: {
     type: [String],
-    default: []
+    default: [],
   },
   offers: [
     {
@@ -51,23 +52,23 @@ const ClubSchema = new Schema({
   },
   menu: {
     drinks: {
-      type: [String], 
-      default: []
+      type: [String],
+      default: [],
     },
     foods: {
       type: [String],
-      default: []
+      default: [],
     },
-    license:{
-      type:String,
-      require:true
+    license: {
+      type: String,
+      required: true, // Corrected "require" to "required"
     },
-    owner:{
-      type:String,
-      require:true
-    }
-  }
+    owner: {
+      type: String,
+      required: true, // Corrected "require" to "required"
+    },
+  },
 });
 
-const Club = mongoose.model('Club', ClubSchema);
+const Club = mongoose.model("Club", ClubSchema);
 export default Club;

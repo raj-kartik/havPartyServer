@@ -6,7 +6,7 @@ const transactionSchema = new Schema(
   {
     user: {
       type: Schema.Types.ObjectId,
-      require: true,
+      required: true,
       ref: "User",
     },
     transaction: [
@@ -15,14 +15,14 @@ const transactionSchema = new Schema(
         receiver: {
           type: Schema.Types.ObjectId,
           ref: "Club",
-          requrie: true,
+          requried: true,
         },
         amount: {
           type: Number,
-          require: true,
+          required: true,
         },
         transactionID: {
-          require: true,
+          required: true,
           type: String,
         },
       },
