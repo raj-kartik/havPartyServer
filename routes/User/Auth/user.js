@@ -4,7 +4,7 @@ import { AuthSignIn } from "../../../controllers/User/Auth/SignIn.js";
 import { updateUser } from "../../../controllers/User/Auth/Update.js";
 import { deleteUser } from "../../../controllers/User/Auth/Delete.js";
 
-const router = express();
+const router = express.Router();
 
 router.post("/signup", AuthSignup);
 router.post("/signin", AuthSignIn);
