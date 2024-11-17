@@ -27,6 +27,18 @@ const ClubSchema = new Schema({
       type: Number,
       required: true,
     },
+    coordinates: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        required: false,
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number], // [longitude, latitude]
+        required: false,
+      },
+    },
   },
   photos: {
     type: [String],
@@ -36,18 +48,18 @@ const ClubSchema = new Schema({
     {
       offer: {
         type: String,
-        required: true,
+        required: false,
       },
     },
   ],
   price: {
     single: {
       type: Number,
-      required: true,
+      required: false,
     },
     couple: {
       type: Number,
-      required: true,
+      required: false,
     },
   },
   menu: {
@@ -61,14 +73,17 @@ const ClubSchema = new Schema({
     },
     license: {
       type: String,
-      required: true, // Corrected "require" to "required"
+      required: true,
     },
     owner: {
       type: String,
-      required: true, // Corrected "require" to "required"
+      required: true,
     },
   },
 });
+
+// Creating a geospatial index on the coordinates field
+ClubSchema.index({ "location.coordinates": "2dsphere" });
 
 const Club = mongoose.model("Club", ClubSchema);
 export default Club;

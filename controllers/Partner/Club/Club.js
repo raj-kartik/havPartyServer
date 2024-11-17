@@ -1,7 +1,7 @@
 import Club from "../../../models/Partner/Club/clubSchema.js";
 
 export const createClub = async (req, res) => {
-  const { name, owner, location, city, state, photos, menu, price, pincode, license } = req.body;
+  const { name, owner, location, city, state, photos, menu, price, pincode, license, coordinates } = req.body;
 
   // Validate required fields
   if (!name || !location) {
@@ -35,7 +35,7 @@ export const createClub = async (req, res) => {
     // Save the club and respond
     await club.save();
     res.status(200).json({
-      message: "Welcome to Hook",
+      message: "Welcome to VIV",
       state: 200,
       club: {
         name,
