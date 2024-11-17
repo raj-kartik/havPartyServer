@@ -1,0 +1,51 @@
+{
+    "name": "Evva Clubs",
+    "manager": "Jane Smith",
+    "location": {
+      "address1": "Pusa road",
+      "address2": "Karol Bagh",
+      "city": "New Delhi",
+      "state": "Delhi"
+    },
+    "pincode": 110005,
+    "photos": [
+      "https://example.com/club-photo1.jpg",
+      "https://example.com/club-photo2.jpg",
+      "https://example.com/club-photo3.jpg"
+    ],
+    "menu": {
+      "drinks": [
+        {
+          "name": "Whiskey",
+          "price": {
+            "small": 2000,
+            "medium": 3000,
+            "large": 4000
+          }
+        }
+      ],
+      "foods": [
+        {
+          "name": "Sushi",
+          "price": 1500
+        },
+        {
+          "name": "Steak",
+          "price": 2500
+        },
+        {
+          "name": "Tacos",
+          "price": 1200
+        }
+      ],
+      "beverages": ["Sprite", "Lemonade", "Sparkling Water"]
+    },
+    "price": {
+      "single": 700,
+      "couple": 1200
+    },
+    "license": "KA987654321",
+    "coordinates": [77.5946, 12.9716],
+    "ownerId":"673a4b8766cc513674d486be"
+  }
+  

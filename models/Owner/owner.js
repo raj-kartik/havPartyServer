@@ -20,12 +20,6 @@ const ownerSchema = new Schema({
       ref: "Club",
     },
   ],
-  partners: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Partner",
-    },
-  ],
   registration_date: {
     type: Date,
     default: Date.now,
@@ -40,6 +34,10 @@ const ownerSchema = new Schema({
       ref: "Ticket", // Reference to the Ticket model
     },
   ],
+  password: {
+    type: String,
+    required: true,
+  },
 });
 
 const Owner = mongoose.model("Owner", ownerSchema);

@@ -5,6 +5,7 @@ import express from "express";
 import mongoose from "mongoose";
 import userRoute from "./routes/User/index.js";
 import partnerRoute from "./routes/Partner/index.js";
+import ownerRoute from "./routes/Owner/owner.js";
 import { pathToRegexp } from "path-to-regexp";
 import { verifyToken } from "./middlewares/middlware.js";
 
@@ -30,6 +31,8 @@ const allowedPaths = [
   "/api/v1/auth/signin",
   "/api/v1/auth/signup",
   "/api/v1/admin/signin",
+  "/api/v1/owner/employee/details",
+  "/api/v1/partner/club/"
 ];
 
 // Function to check for dynamic path matches
@@ -59,6 +62,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/v1/", userRoute);
 app.use("/api/v1/partner", partnerRoute);
+app.use("/api/v1/owner", ownerRoute);
 
 // Start the Express server
 app.listen(port, () => {

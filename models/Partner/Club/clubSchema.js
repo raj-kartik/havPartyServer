@@ -1,6 +1,53 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
+const DrinkSchema = new Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  price: {
+    small: {
+      type: Number,
+      required: false,
+    },
+    medium: {
+      type: Number,
+      required: false,
+    },
+    large: {
+      type: Number,
+      required: false,
+    },
+  },
+});
+
+const FoodSchema = new Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  price: {
+    type: Number,
+    required: false,
+  },
+});
+
+const MenuSchema = new Schema({
+  drinks: {
+    type: [DrinkSchema],
+    default: [],
+  },
+  foods: {
+    type: [FoodSchema],
+    default: [],
+  },
+  beverages: {
+    type: [String],
+    default: [],
+  },
+});
+
 const ClubSchema = new Schema({
   name: {
     type: String,
@@ -13,7 +60,7 @@ const ClubSchema = new Schema({
     },
     address2: {
       type: String,
-      default: "", // Default to an empty string for consistency
+      default: "",
     },
     city: {
       type: String,
@@ -31,11 +78,10 @@ const ClubSchema = new Schema({
       type: {
         type: String,
         enum: ["Point"],
-        required: false,
         default: "Point",
       },
       coordinates: {
-        type: [Number], // [longitude, latitude]
+        type: [Number],
         required: false,
       },
     },
@@ -44,14 +90,10 @@ const ClubSchema = new Schema({
     type: [String],
     default: [],
   },
-  offers: [
-    {
-      offer: {
-        type: String,
-        required: false,
-      },
-    },
-  ],
+  menu: {
+    type: MenuSchema,
+    default: {},
+  },
   price: {
     single: {
       type: Number,
@@ -62,23 +104,14 @@ const ClubSchema = new Schema({
       required: false,
     },
   },
-  menu: {
-    drinks: {
-      type: [String],
-      default: [],
-    },
-    foods: {
-      type: [String],
-      default: [],
-    },
-    license: {
-      type: String,
-      required: true,
-    },
-    owner: {
-      type: String,
-      required: true,
-    },
+  license: {
+    type: String,
+    required: true,
+  },
+  owner: {
+    type: Schema.Types.ObjectId,
+    ref: "Owner",
+    required: true,
   },
 });
 

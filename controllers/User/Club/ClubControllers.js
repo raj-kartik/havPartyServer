@@ -72,3 +72,16 @@ export const popularClubs = async (req, res) => {
       .json({ message: "Server error. Please try again later." });
   }
 };
+
+export const getClubDetails = async (req, res) => {
+
+  const {id} = req.body;
+  try {
+    const data = Club.find({where:{id}})
+  } catch (error) {
+    console.error("Error during fetching clubs:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error. Please try again later." });
+  }
+};

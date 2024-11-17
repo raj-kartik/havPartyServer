@@ -45,6 +45,8 @@ export const AuthSignup = async (req, res) => {
         gender: user.gender,
       },
     });
+
+    return;
   } catch (err) {
     console.error(err);
     res.status(500).json({
