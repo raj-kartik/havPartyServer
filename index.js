@@ -60,7 +60,7 @@ app.get("/", (req, res) => {
   res.send("This is hav Party");
 });
 
-app.use("/api/v1/", userRoute);
+app.use("/api/v1", userRoute);
 app.use("/api/v1/partner", partnerRoute);
 app.use("/api/v1/owner", ownerRoute);
 

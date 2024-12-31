@@ -9,8 +9,7 @@ router.post("/sign-up", ownerSignUp);
 
 // get
 router.get("/employee", getEmployee);
-
-// get
+// get 
 router.get("/employee/details", getEmployeeDetails);
 
 export default router;
