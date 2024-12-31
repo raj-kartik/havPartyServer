@@ -16,7 +16,7 @@ export const AuthSignIn = async (req, res) => {
       $or: [{ email: email }, { username: username }],
     });
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(400).json({ message: "User not found." });
     }
     if (user.isBlocked || user.isBanned) {
       return res.status(403).json({ message: "User is blocked or banned." });
