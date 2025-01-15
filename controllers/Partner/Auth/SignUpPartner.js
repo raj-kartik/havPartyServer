@@ -1,8 +1,10 @@
 import Club from "../../../models/Partner/Club/clubSchema.js";
 import Partner from "../../../models/Partner/Partner.js";
+import bcrypt from "bcryptjs";  // For hashing the password
+import jwt from "jsonwebtoken"; // For generating JWT
 
 export const createPartner = async (req, res) => {
-  const { name, email, mobile, position, club, address, profilePicture } = req.body;
+  const { name, email, mobile, position, club, address, profilePicture, password } = req.body;
 
   try {
     // Validate if position is not "Owner" and club is provided
@@ -18,6 +20,14 @@ export const createPartner = async (req, res) => {
       }
     }
 
+    // Validate the password field
+    if (!password || password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+    }
+
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 12); // Hash password with 12 salt rounds
+
     // Create a new Partner
     const partner = new Partner({
       name,
@@ -27,13 +37,23 @@ export const createPartner = async (req, res) => {
       club,
       address,
       profilePicture,
+      password: hashedPassword, // Save the hashed password
     });
 
+    // Save the partner to the database
     await partner.save();
+
+    // Generate a JWT token
+    const token = jwt.sign(
+      { partnerId: partner._id, email: partner.email, position: partner.position },
+      process.env.JWT_SECRET, // Use your secret key from .env
+      { expiresIn: "1h" } // Set expiration time for the token (e.g., 1 hour)
+    );
 
     return res.status(201).json({
       message: "Partner created successfully",
       data: partner,
+      token, // Include the generated token in the response
     });
   } catch (error) {
     console.error("Error creating partner:", error);

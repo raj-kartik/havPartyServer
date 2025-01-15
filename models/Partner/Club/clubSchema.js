@@ -48,6 +48,33 @@ const MenuSchema = new Schema({
   },
 });
 
+const OfferSchema = new Schema({
+  title: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+    required: true,
+  },
+  discount: {
+    type: Number, // Percentage discount (e.g., 20 for 20% off)
+    required: true,
+  },
+  validFrom: {
+    type: Date,
+    required: true,
+  },
+  validUntil: {
+    type: Date,
+    required: true,
+  },
+  terms: {
+    type: String,
+    default: "",
+  },
+});
+
 const ClubSchema = new Schema({
   name: {
     type: String,
@@ -112,6 +139,10 @@ const ClubSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "Owner",
     required: true,
+  },
+  offers: {
+    type: [OfferSchema], // Adding offers array
+    default: [],
   },
 });
 

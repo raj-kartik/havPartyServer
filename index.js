@@ -32,7 +32,10 @@ const allowedPaths = [
   "/api/v1/auth/signup",
   "/api/v1/admin/signin",
   "/api/v1/owner/employee/details",
-  "/api/v1/partner/club/"
+  "/api/v1/partner/club/",
+  "/api/v1/parnter/auth/signin",
+  "/api/v1/partner/auth/signup",
+  "/api/v1",
 ];
 
 // Function to check for dynamic path matches
@@ -56,7 +59,7 @@ app.use((req, res, next) => {
 });
 
 // Define routes
-app.get("/", (req, res) => {
+app.get("/api/v1", (req, res) => {
   res.send("This is hav Party");
 });
 
