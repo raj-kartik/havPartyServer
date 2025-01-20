@@ -48,7 +48,7 @@ export const popularClubs = async (req, res) => {
   const { city, state } = req.body;
 
   if (!city && !state)
-    return res.status(404).json({
+    return res.status(300).json({
       message: "Please provide the city or state",
     });
 
