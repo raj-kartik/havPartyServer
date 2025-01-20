@@ -6,6 +6,6 @@ import {
 const router = express();
 
 router.post("/near-by-club", getNearByClub);
-router.post("/popular-club", popularClubs);
+router.get("/popular-club", popularClubs);
 
 export default router;

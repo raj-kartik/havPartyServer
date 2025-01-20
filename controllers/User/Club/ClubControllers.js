@@ -44,19 +44,53 @@ export const getNearByClub = async (req, res) => {
   }
 };
 
+// export const popularClubs = async (req, res) => {
+//   const { city, state } = req.body;
+
+//   if (!city && !state)
+//     return res.status(500).json({
+//       message: "Please provide the city or state",
+//     });
+
+//   try {
+//     const clubs = await Club.find({
+//       "location.city": city,
+//       "location.state": state,
+//     });
+
+//     if (!clubs || clubs.length === 0)
+//       return res.status(204).json({ message: "No data found" });
+
+//     return res.status(200).json({
+//       message: "Clubs are available",
+//       data: clubs,
+//     });
+//   } catch (error) {
+//     console.error("Error during fetching clubs:", error);
+//     return res
+//       .status(500)
+//       .json({ message: "Server error. Please try again later." });
+//   }
+// };
+
 export const popularClubs = async (req, res) => {
   const { city, state } = req.body;
 
   if (!city && !state)
-    return res.status(500).json({
+    return res.status(400).json({
       message: "Please provide the city or state",
     });
 
   try {
-    const clubs = await Club.find({
-      "location.city": city,
-      "location.state": state,
-    });
+    const query = {};
+    if (city) {
+      query["location.city"] = { $regex: city, $options: "i" }; // Case-insensitive regex for city
+    }
+    if (state) {
+      query["location.state"] = { $regex: state, $options: "i" }; // Case-insensitive regex for state
+    }
+
+    const clubs = await Club.find(query);
 
     if (!clubs || clubs.length === 0)
       return res.status(204).json({ message: "No data found" });
