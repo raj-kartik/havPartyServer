@@ -73,6 +73,7 @@ export const popularClubs = async (req, res) => {
   }
 };
 
+
 // export const popularClubs = async (req, res) => {
 //   // Extract city and state from the request body
 //   const { city, state } = req.body;
