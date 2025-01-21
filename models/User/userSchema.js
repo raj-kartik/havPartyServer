@@ -61,6 +61,13 @@ const userSchema = new Schema({
       default: [],
     },
   ],
+  clubLikes: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Club",
+      default: [],
+    },
+  ],
 });
 
 const User = mongoose.model("User", userSchema);
