@@ -11,5 +11,4 @@ router.post("/near-by-club", getNearByClub);
 router.post("/popular-club", popularClubs);
 router.post("/like-club",likeClub);
 router.get("/:id",getClubDetails);
-
 export default router;
