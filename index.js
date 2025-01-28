@@ -36,6 +36,7 @@ const allowedPaths = [
   "/api/v1/parnter/auth/signin",
   "/api/v1/partner/auth/signup",
   "/api/v1",
+  "/api/v1/partner/club/create"
 ];
 
 // Function to check for dynamic path matches

@@ -144,6 +144,13 @@ const ClubSchema = new Schema({
     type: [OfferSchema], // Adding offers array
     default: [],
   },
+  likes: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: [],
+    },
+  ],
 });
 
 // Creating a geospatial index on the coordinates field
