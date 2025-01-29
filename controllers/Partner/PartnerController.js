@@ -1,4 +1,4 @@
-import Partner from "../../models/Partner/Partner.js";
+import Partner from "../../models/Partner/Employee.js";
 export const partnerClub = async (req, res) => {
   const { position, name, email, mobile, clubId } = req.body;
 

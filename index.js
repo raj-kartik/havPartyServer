@@ -4,7 +4,7 @@ dotenv.config();
 import express from "express";
 import mongoose from "mongoose";
 import userRoute from "./routes/User/index.js";
-import partnerRoute from "./routes/Partner/index.js";
+import employeeRoute from "./routes/Partner/index.js";
 import ownerRoute from "./routes/Owner/owner.js";
 import { pathToRegexp } from "path-to-regexp";
 import { verifyToken } from "./middlewares/middlware.js";
@@ -36,7 +36,9 @@ const allowedPaths = [
   "/api/v1/parnter/auth/signin",
   "/api/v1/partner/auth/signup",
   "/api/v1",
-  "/api/v1/partner/club/create"
+  "/api/v1/partner/club/create",
+  "/api/v1/owner/signup",
+  // "/api/v1/owner/signin",
 ];
 
 // Function to check for dynamic path matches
@@ -65,7 +67,7 @@ app.get("/api/v1", (req, res) => {
 });
 
 app.use("/api/v1", userRoute);
-app.use("/api/v1/partner", partnerRoute);
+app.use("/api/v1/employee", employeeRoute);
 app.use("/api/v1/owner", ownerRoute);
 
 // Start the Express server

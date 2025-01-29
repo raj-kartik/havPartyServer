@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs"; // For password comparison
 import jwt from "jsonwebtoken"; // For generating JWT
-import Partner from "../../../models/Partner/Partner.js";
+import Partner from "../../../models/Partner/Employee.js";
 export const signInPartner = async (req, res) => {
   const { email, password } = req.body;
 

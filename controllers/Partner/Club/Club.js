@@ -1,5 +1,5 @@
 import Club from "../../../models/Partner/Club/clubSchema.js";
-import Partner from "../../../models/Partner/Partner.js";
+import Partner from "../../../models/Partner/Employee.js";
 
 export const createClub = async (req, res) => {
   const {

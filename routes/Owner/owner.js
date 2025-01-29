@@ -5,8 +5,7 @@ import { getEmployee, getEmployeeDetails } from "../../controllers/Partner/Partn
 const router = express.Router();
 
 // post
-router.post("/sign-up", ownerSignUp);
-
+router.post("/signup", ownerSignUp);
 // get
 router.get("/employee", getEmployee);
 // get 

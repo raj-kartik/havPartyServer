@@ -1,8 +1,7 @@
-import Owner from "../../../models/Owner/owner.js";
 import Club from "../../../models/Partner/Club/clubSchema.js";
-import Employee from "../../../models/Partner/Partner.js";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs"; // For hashing the password
+import jwt from "jsonwebtoken"; // For generating JWT
+import Employee from "../../../models/Partner/Employee.js";
 
 export const createPartner = async (req, res) => {
   const {
@@ -32,42 +31,30 @@ export const createPartner = async (req, res) => {
       }
     }
 
+    // Validate the password field
     if (!password || password.length < 6) {
       return res
         .status(400)
         .json({ message: "Password must be at least 6 characters long" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 12); // Hash password with 12 salt rounds
 
-    let clubUser;
+    // Create a new Partner
+    const partner = new Employee({
+      name,
+      email,
+      mobile,
+      position,
+      club,
+      address,
+      profilePicture,
+      password: hashedPassword, // Save the hashed password
+    });
 
-    if (position.toLowerCase() === "owner") {
-      clubUser = new Owner({
-        name,
-        email,
-        mobile,
-        position,
-        address,
-        profilePicture,
-        password: hashedPassword, 
-      });
-    }
-
-    if (position.toLowerCase() !== "owner") {
-      clubUser = new Employee({
-        name,
-        email,
-        mobile,
-        position,
-        club,
-        address,
-        profilePicture,
-        password: hashedPassword, // Save the hashed password
-      });
-    }
-
-    await clubUser.save();
+    // Save the partner to the database
+    await partner.save();
 
     // Generate a JWT token
     const token = jwt.sign(
