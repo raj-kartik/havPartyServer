@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-const partnerSchema = new Schema({
+const employeeSchema = new Schema({
   name: {
     type: String,
     required: true,
@@ -44,6 +44,6 @@ const partnerSchema = new Schema({
   }
 });
 
-const Partner = mongoose.model("Partner", partnerSchema);
+const Employee = mongoose.model("Employee", employeeSchema);
 
-export default Partner;
+export default Employee;

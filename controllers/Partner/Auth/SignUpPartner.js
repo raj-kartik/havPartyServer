@@ -1,15 +1,27 @@
+import Owner from "../../../models/Owner/owner.js";
 import Club from "../../../models/Partner/Club/clubSchema.js";
-import Partner from "../../../models/Partner/Partner.js";
-import bcrypt from "bcryptjs";  // For hashing the password
-import jwt from "jsonwebtoken"; // For generating JWT
+import Employee from "../../../models/Partner/Partner.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 export const createPartner = async (req, res) => {
-  const { name, email, mobile, position, club, address, profilePicture, password } = req.body;
+  const {
+    name,
+    email,
+    mobile,
+    position,
+    club,
+    address,
+    profilePicture,
+    password,
+  } = req.body;
 
   try {
     // Validate if position is not "Owner" and club is provided
     if (position !== "Owner" && !club) {
-      return res.status(400).json({ message: "Club is required for this position" });
+      return res
+        .status(400)
+        .json({ message: "Club is required for this position" });
     }
 
     // If club is provided, validate its existence
@@ -20,32 +32,50 @@ export const createPartner = async (req, res) => {
       }
     }
 
-    // Validate the password field
     if (!password || password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters long" });
     }
 
-    // Hash the password before saving
-    const hashedPassword = await bcrypt.hash(password, 12); // Hash password with 12 salt rounds
+    const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create a new Partner
-    const partner = new Partner({
-      name,
-      email,
-      mobile,
-      position,
-      club,
-      address,
-      profilePicture,
-      password: hashedPassword, // Save the hashed password
-    });
+    let clubUser;
 
-    // Save the partner to the database
-    await partner.save();
+    if (position.toLowerCase() === "owner") {
+      clubUser = new Owner({
+        name,
+        email,
+        mobile,
+        position,
+        address,
+        profilePicture,
+        password: hashedPassword, 
+      });
+    }
+
+    if (position.toLowerCase() !== "owner") {
+      clubUser = new Employee({
+        name,
+        email,
+        mobile,
+        position,
+        club,
+        address,
+        profilePicture,
+        password: hashedPassword, // Save the hashed password
+      });
+    }
+
+    await clubUser.save();
 
     // Generate a JWT token
     const token = jwt.sign(
-      { partnerId: partner._id, email: partner.email, position: partner.position },
+      {
+        partnerId: partner._id,
+        email: partner.email,
+        position: partner.position,
+      },
       process.env.JWT_SECRET, // Use your secret key from .env
       { expiresIn: "1h" } // Set expiration time for the token (e.g., 1 hour)
     );

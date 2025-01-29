@@ -141,7 +141,8 @@ const ClubSchema = new Schema({
     required: true,
   },
   offers: {
-    type: [OfferSchema], // Adding offers array
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Offer",
     default: [],
   },
   likes: [
