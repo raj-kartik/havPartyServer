@@ -27,18 +27,26 @@ mongoose
 
 // Define allowed paths
 const allowedPaths = [
+  // default path
   "/",
+  "/api/v1",
+
+  // admin path
+  "/api/v1/admin/signin",
+
+  // user path
   "/api/v1/auth/signin",
   "/api/v1/auth/signup",
-  "/api/v1/admin/signin",
+
+  // employee path
+  "api/v1/employee/signup",
+  "/api/v1/employee/signin",
+
+  // owner path
   "/api/v1/owner/employee/details",
-  "/api/v1/partner/club/",
-  "/api/v1/parnter/auth/signin",
-  "/api/v1/partner/auth/signup",
-  "/api/v1",
-  "/api/v1/partner/club/create",
+  "/api/v1/owner/employees",
   "/api/v1/owner/signup",
-  // "/api/v1/owner/signin",
+  "/api/v1/owner/signin",
 ];
 
 // Function to check for dynamic path matches

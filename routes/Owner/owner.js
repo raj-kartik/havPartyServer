@@ -7,7 +7,7 @@ const router = express.Router();
 // post
 router.post("/signup", ownerSignUp);
 // get
-router.get("/employee", getEmployee);
+router.get("/employees", getEmployee);
 // get 
 router.get("/employee/details", getEmployeeDetails);
 
