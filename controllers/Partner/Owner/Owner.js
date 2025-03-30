@@ -34,6 +34,7 @@ export const ownerSignUp = async (req, res) => {
         mobile: mobile,
         email: email,
       },
+      status:200
     });
   } catch (err) {
     console.error(err);
