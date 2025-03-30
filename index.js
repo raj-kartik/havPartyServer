@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import mongoose from "mongoose";
+import cors from "cors";
 import userRoute from "./routes/User/index.js";
 import employeeRoute from "./routes/Partner/index.js";
 import ownerRoute from "./routes/Owner/owner.js";
@@ -11,7 +12,7 @@ import { verifyToken } from "./middlewares/middlware.js";
 
 // Create an instance of Express
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8000;
 
 // Middleware to parse JSON
 app.use(express.json());
@@ -26,6 +27,8 @@ mongoose
   .catch((error) => console.error("MongoDB connection error:", error));
 
 // Define allowed paths
+
+app.use(cors());
 const allowedPaths = [
   // default path
   "/",
