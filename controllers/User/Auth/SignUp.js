@@ -34,7 +34,7 @@ export const AuthSignup = async (req, res) => {
       process.env.JWT_SECRET 
     );
     res.status(200).json({
-      message: "Welcome to Hook",
+      message: "Welcome to VIV",
       status: 200,
       token, 
       user: {
