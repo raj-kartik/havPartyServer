@@ -18,7 +18,7 @@ const port = process.env.PORT || 8000;
 app.use(express.json());
 
 // Log MongoDB connection URL
-console.log("MONGO_URL:", process.env.MONGO_URL);
+// console.log("MONGO_URL:", process.env.MONGO_URL);
 
 // Connect to MongoDB
 mongoose
