@@ -1,27 +1,20 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
+// Drink subdocument schema
 const DrinkSchema = new Schema({
   name: {
     type: String,
     required: true,
   },
   price: {
-    small: {
-      type: Number,
-      required: false,
-    },
-    medium: {
-      type: Number,
-      required: false,
-    },
-    large: {
-      type: Number,
-      required: false,
-    },
+    small: { type: Number },
+    medium: { type: Number },
+    large: { type: Number },
   },
 });
 
+// Food subdocument schema
 const FoodSchema = new Schema({
   name: {
     type: String,
@@ -29,10 +22,10 @@ const FoodSchema = new Schema({
   },
   price: {
     type: Number,
-    required: false,
   },
 });
 
+// Menu schema (nested in Club)
 const MenuSchema = new Schema({
   drinks: {
     type: [DrinkSchema],
@@ -48,6 +41,7 @@ const MenuSchema = new Schema({
   },
 });
 
+// Offer schema (separate collection, used as ref in Club)
 const OfferSchema = new Schema({
   title: {
     type: String,
@@ -58,7 +52,7 @@ const OfferSchema = new Schema({
     required: true,
   },
   discount: {
-    type: Number, // Percentage discount (e.g., 20 for 20% off)
+    type: Number, // e.g., 20 for 20% off
     required: true,
   },
   validFrom: {
@@ -75,32 +69,21 @@ const OfferSchema = new Schema({
   },
 });
 
+export const Offer =
+  mongoose.models.Offer || mongoose.model("Offer", OfferSchema);
+
+// Club main schema
 const ClubSchema = new Schema({
   name: {
     type: String,
     required: true,
   },
   location: {
-    address1: {
-      type: String,
-      required: true,
-    },
-    address2: {
-      type: String,
-      default: "",
-    },
-    city: {
-      type: String,
-      required: true,
-    },
-    state: {
-      type: String,
-      required: true,
-    },
-    pincode: {
-      type: Number,
-      required: true,
-    },
+    address1: { type: String, required: true },
+    address2: { type: String, default: "" },
+    city: { type: String, required: true },
+    state: { type: String, required: true },
+    pincode: { type: Number, required: true },
     coordinates: {
       type: {
         type: String,
@@ -108,8 +91,7 @@ const ClubSchema = new Schema({
         default: "Point",
       },
       coordinates: {
-        type: [Number],
-        required: false,
+        type: [Number], // [longitude, latitude]
       },
     },
   },
@@ -119,17 +101,11 @@ const ClubSchema = new Schema({
   },
   menu: {
     type: MenuSchema,
-    default: {},
+    default: () => ({}),
   },
   price: {
-    single: {
-      type: Number,
-      required: false,
-    },
-    couple: {
-      type: Number,
-      required: false,
-    },
+    single: { type: Number },
+    couple: { type: Number },
   },
   license: {
     type: String,
@@ -140,22 +116,28 @@ const ClubSchema = new Schema({
     ref: "Owner",
     required: true,
   },
-  offers: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Offer",
-    default: [],
+  partnerId: {
+    type: Schema.Types.ObjectId,
+    ref: "Partner",
+    required: false,
   },
+  offers: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Offer",
+    },
+  ],
   likes: [
     {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
-      default: [],
     },
   ],
 });
 
-// Creating a geospatial index on the coordinates field
+// Geo index for location
 ClubSchema.index({ "location.coordinates": "2dsphere" });
 
-const Club = mongoose.model("Club", ClubSchema);
+const Club = mongoose.models.Club || mongoose.model("Club", ClubSchema);
+
 export default Club;

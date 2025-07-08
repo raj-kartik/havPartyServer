@@ -1,5 +1,10 @@
-import express from 'express'
+import express from "express";
+import { bookingClub } from "../../../controllers/Partner/Club/Club.js";
 
-const router = express();
+const router = express.Router();
 
-export default router
+// booking club
+router.post("/club", bookingClub);
+
+
+export default router;

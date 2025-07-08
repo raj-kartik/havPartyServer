@@ -31,7 +31,7 @@ const ownerSchema = new Schema({
   transactions: [
     {
       type: Schema.Types.ObjectId,
-      ref: "Ticket", // Reference to the Ticket model
+      ref: "Ticket",
     },
   ],
   password: {
@@ -40,6 +40,7 @@ const ownerSchema = new Schema({
   },
 });
 
-const Owner = mongoose.model("Owner", ownerSchema);
+// Prevent model overwrite in dev environment
+const Owner = mongoose.models.Owner || mongoose.model("Owner", ownerSchema);
 
 export default Owner;

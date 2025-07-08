@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev":"nodemon"
   },
   "type": "module",
   "author": "",
@@ -20,12 +21,17 @@
     "jsonwebtoken": "^9.0.2",
     "module-alias": "^2.2.3",
     "mongoose": "^8.6.1",
-    "nodemon": "^3.1.4",
     "path-to-regexp": "^8.2.0"
   },
   "_moduleAliases": {
     "@controllers": "src/controllers",
     "@model": "src/models",
     "@route": "src/routes"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
   }
 }

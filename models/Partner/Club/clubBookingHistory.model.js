@@ -6,6 +6,11 @@ const bookingHistorySchema = mongoose.Schema({
         ref: 'User',
         required: true
     },
+    clubId:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Club',
+        required: true
+    },
     date: {
         type: Date,
         required: true,
