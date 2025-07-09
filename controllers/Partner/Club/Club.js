@@ -1,6 +1,6 @@
+import Owner from "../../../models/Owner/owner.js";
 import Club from "../../../models/Partner/Club/clubSchema.js";
 import Partner from "../../../models/Partner/Employee.js";
-import Owner from "../../../models/Owner/Owner.js";
 import { log } from "console";
 
 // Controller to create a new club
