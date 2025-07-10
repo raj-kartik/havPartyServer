@@ -20,7 +20,15 @@ const port = process.env.PORT || 8000;
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow all origins, including undefined (Postman, curl)
+      callback(null, true);
+    },
+    credentials: true, // if you ever need to send cookies
+  })
+);
 
 // Check if required env variables are defined
 if (!process.env.MONGO_URL) {
@@ -42,7 +50,6 @@ mongoose
     console.error("❌ MongoDB connection error:", error.message);
     process.exit(1);
   });
-
 
 // List of allowed public routes (no token required)
 const allowedPaths = [
@@ -72,7 +79,8 @@ const isDynamicPath = (path) => {
 app.use((req, res, next) => {
   const cleanedPath = req.path.split("?")[0]; // Strip query strings
   const isAllowed =
-    allowedPaths.some((p) => cleanedPath.startsWith(p)) || isDynamicPath(cleanedPath);
+    allowedPaths.some((p) => cleanedPath.startsWith(p)) ||
+    isDynamicPath(cleanedPath);
 
   if (isAllowed) {
     return next();
