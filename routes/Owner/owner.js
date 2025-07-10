@@ -1,5 +1,5 @@
 import express from "express";
-import { ownerSignIn, ownerSignUp } from "../../controllers/Partner/Owner/Owner.js";
+import { ownerDetails, ownerSignIn, ownerSignUp } from "../../controllers/Partner/Owner/Owner.js";
 import { getEmployee, getEmployeeDetails } from "../../controllers/Partner/PartnerController.js";
 import { createClub, updateManager } from "../../controllers/Partner/Club/Club.js";
 
@@ -8,6 +8,9 @@ const router = express.Router();
 // post
 router.post("/signup", ownerSignUp);
 router.post("/signin", ownerSignIn);
+
+// owner details
+router.get("/details", ownerDetails);
 
 // employee
 router.get("/employees", getEmployee);

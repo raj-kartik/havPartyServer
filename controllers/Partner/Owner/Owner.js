@@ -2,6 +2,7 @@
 import Owner from "../../../models/Owner/owner.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+
 export const ownerSignUp = async (req, res) => {
   const { name, email, mobile, password } = req.body;
 
@@ -46,8 +47,6 @@ export const ownerSignUp = async (req, res) => {
 export const ownerSignIn = async (req, res) => {
   const { mobile, password } = req.body;
 
-  
-
   if ((!mobile, !password))
     return res.status(500).json({
       message: "All fields are required",
@@ -79,6 +78,35 @@ export const ownerSignIn = async (req, res) => {
       message: "Login successful.",
       user,
       token,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const ownerDetails = async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    if (!token) {
+      return res.status(401).json({ message: "Token is required" });
+    }
+
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Find the owner by ID
+    const owner = await Owner.findById(decoded.ownerId).select("-password");
+
+    if (!owner) {
+      return res.status(404).json({ message: "Owner not found" });
+    }
+
+    return res.status(200).json({
+      message: "Owner details fetched successfully",
+      data: owner,
+      status: 200,
     });
   } catch (err) {
     console.error(err);
