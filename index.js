@@ -53,7 +53,6 @@ mongoose
 
 // List of allowed public routes (no token required)
 const allowedPaths = [
-  "/",
   "/api/v1",
   "/api/v1/admin/signin",
   "/api/v1/auth/signin",

@@ -86,17 +86,17 @@ export const ownerSignIn = async (req, res) => {
 };
 
 export const ownerDetails = async (req, res) => {
-  const { token } = req.body;
+  const authHeader = req.headers.authorization;
+  const ticket = authHeader?.split(" ")[1]; // extract token
+
+  // console.log("Ticket received:", ticket);
 
   try {
-    if (!token) {
-      return res.status(401).json({ message: "Token is required" });
+    if (!ticket) {
+      return res.status(401).json({ message: "Ticket is required" });
     }
 
-    // Verify the token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Find the owner by ID
+    const decoded = jwt.verify(ticket, process.env.JWT_SECRET);
     const owner = await Owner.findById(decoded.ownerId).select("-password");
 
     if (!owner) {
@@ -105,7 +105,16 @@ export const ownerDetails = async (req, res) => {
 
     return res.status(200).json({
       message: "Owner details fetched successfully",
-      data: owner,
+      data: {
+        name: owner?.name,
+        id: owner?.id,
+        mobile: owner?.contact_number,
+        email: owner?.email,
+        club: owner?.clubs_owned || [], // Assuming club is a field in the Owner model
+        active: owner?.active, // Assuming active is a field in the Owner model
+        isBlocked: owner?.isBlocked, // Assuming isBlocked is a field in the Owner model
+        registration_date: owner?.registration_date,
+      },
       status: 200,
     });
   } catch (err) {
