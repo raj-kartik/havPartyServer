@@ -17,7 +17,8 @@ export const createClub = async (req, res) => {
     pincode,
     coordinates,
     license,
-    offers = [],
+    openTiming,
+    closeTiming,
   } = req.body;
 
   // Validate required fields
@@ -25,8 +26,8 @@ export const createClub = async (req, res) => {
   if (!id) return res.status(400).json({ message: "Owner ID is required." });
   if (!manager)
     return res.status(400).json({ message: "Manager name is required." });
-  if (!license)
-    return res.status(400).json({ message: "License is required." });
+  // if (!license)
+  //   return res.status(400).json({ message: "License is required." });
   if (!location?.address1 || !location?.city || !location?.state) {
     return res
       .status(400)
@@ -34,6 +35,14 @@ export const createClub = async (req, res) => {
   }
   if (!pincode)
     return res.status(400).json({ message: "Pincode is required." });
+
+  if (!coordinates || !Array.isArray(coordinates) || coordinates.length !== 2) {
+    return res.status(400).json({ message: "Valid coordinates are required." });
+  } 
+
+  if(!openTiming || !closeTiming) {
+    return res.status(400).json({ message: "Open and close timings are required." });
+  }
 
   try {
     // Check for duplicate club
@@ -56,6 +65,8 @@ export const createClub = async (req, res) => {
       name,
       manager,
       license,
+      openTiming,
+      closeTiming,
       location: {
         address1: location.address1,
         address2: location.address2 || "",
@@ -78,7 +89,7 @@ export const createClub = async (req, res) => {
         couple: price?.couple || 0,
       },
       owner: id,
-      offers: offers, // array of Offer ObjectIds
+      // offers: offers, // array of Offer ObjectIds
     });
 
     // Save club
@@ -98,6 +109,23 @@ export const createClub = async (req, res) => {
     return res.status(500).json({ message: "Internal server error." });
   }
 };
+
+// get club
+export const getAllClub = async(req,res)=>{
+  const {userId} = req.query;
+  try{
+    if(!userId){
+      return res.status(400).json({ message: "User ID is required." });
+    }
+
+    const clubs = await Club.find({owner:userId});
+    return res.status(200).json({ clubs });
+  }
+  catch(err){
+    console.error("Error fetching clubs:", err);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+}
 
 // Controller to update the manager of a specific club
 // This function assumes that the manager is a Partner and the owner is an Owner

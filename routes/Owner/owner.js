@@ -1,7 +1,7 @@
 import express from "express";
 import { ownerDetails, ownerSignIn, ownerSignUp } from "../../controllers/Partner/Owner/Owner.js";
 import { getEmployee, getEmployeeDetails } from "../../controllers/Partner/PartnerController.js";
-import { createClub, updateManager } from "../../controllers/Partner/Club/Club.js";
+import { createClub, getAllClub, updateManager } from "../../controllers/Partner/Club/Club.js";
 
 const router = express.Router();
 
@@ -17,9 +17,7 @@ router.get("/employees", getEmployee);
 router.get("/employee/details", getEmployeeDetails);
 
 // club
-router.get("/club", (req, res) => {
-  res.send("Club details");
-});
+router.get("/all-clubs", getAllClub);
 router.post("/create-club", createClub);
 router.put("/update-club", updateManager);
 

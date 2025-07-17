@@ -78,6 +78,21 @@ const ClubSchema = new Schema({
     type: String,
     required: true,
   },
+  openTiming: {
+    type: String, // Format: "HH:mm"
+    required: true,
+  },
+  closeTiming: {
+    type: String,
+    required: true,
+    validate: {
+      validator: function (v) {
+        return v !== this.openTiming;
+      },
+      message: "Closing time cannot be the same as opening time",
+    },
+  },
+
   location: {
     address1: { type: String, required: true },
     address2: { type: String, default: "" },
@@ -120,6 +135,13 @@ const ClubSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "Partner",
     required: false,
+  },
+  maxClubCapacity: {
+    type: Number,
+  },
+  clubCapacity:{
+    type: Number,
+    default: 0,
   },
   offers: [
     {
