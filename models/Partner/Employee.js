@@ -14,7 +14,11 @@ const employeeSchema = new Schema({
     type: String,
     required: true,
   },
-  clubs_owned: [
+  ownerId: {
+    type: Schema.Types.ObjectId,
+    ref: "Owner", // Reference to the User model
+  },
+  club: [
     {
       type: Schema.Types.ObjectId,
       ref: "Club", // Reference to the Club model
@@ -28,12 +32,6 @@ const employeeSchema = new Schema({
     type: Boolean,
     default: true,
   },
-  transactions: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Ticket", // Reference to the Ticket model
-    },
-  ],
   password: {
     type: String,
     required: true,
@@ -41,7 +39,11 @@ const employeeSchema = new Schema({
   profilePicture: {
     type: String,
     default: "", // Optional field for storing profile picture URL
-  }
+  },
+  position: {
+    type: String,
+    required: true,
+  },
 });
 
 const Employee = mongoose.model("Employee", employeeSchema);
