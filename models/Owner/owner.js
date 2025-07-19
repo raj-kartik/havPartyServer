@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
+// need to look into this once
 const ownerSchema = new Schema({
   name: {
     type: String,
