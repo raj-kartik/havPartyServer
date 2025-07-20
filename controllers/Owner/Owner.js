@@ -1,5 +1,5 @@
 // import Owner from "../../../models/Partner/Owner/owner.js";
-import Owner from "../../../models/Owner/owner.js";
+import Owner from "../../models/Owner/owner.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 

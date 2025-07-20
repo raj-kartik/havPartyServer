@@ -1,5 +1,5 @@
 import express from 'express'
-import {addOfferToClub, createClub} from '../../../controllers/Partner/Club/Club.js';
+import {addOfferToClub, createClub} from '../../../controllers/Club/Club.js';
 
 const router = express.Router();
 

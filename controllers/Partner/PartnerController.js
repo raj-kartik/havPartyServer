@@ -32,8 +32,10 @@ export const addEmployee = async (req, res) => {
 
   try {
     const existingUser = await Partner.findOne({
-      $or: [{ email }, { mobile }, { ownerId }] // Check for existing email, mobile, or ownerId
+      $or: [{ email }, { mobile }] // Check for existing email, mobile, or ownerId
     });
+
+    console.log("Existing User:", existingUser);
     if (existingUser) {
       return res.status(400).json({
         message: "Mobile or email already exists",
@@ -47,7 +49,7 @@ export const addEmployee = async (req, res) => {
       name,
       email,
       mobile,
-      clubId,
+      // clubId,
       position,
       club: clubId,
       password:hashedPassword,
@@ -96,8 +98,6 @@ export const getEmployee = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
-
-
 
 export const getEmployeeDetails = async (req, res) => {
   const { partnerId } = req.body;

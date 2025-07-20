@@ -1,7 +1,7 @@
 import express from "express";
-import { ownerDetails, ownerSignIn, ownerSignUp } from "../../controllers/Partner/Owner/Owner.js";
+import { ownerDetails, ownerSignIn, ownerSignUp } from "../../controllers/Owner/Owner.js";
 import { addEmployee, getEmployee, getEmployeeDetails } from "../../controllers/Partner/PartnerController.js";
-import { createClub, getAllClub, updateManager } from "../../controllers/Partner/Club/Club.js";
+import { createClub, getAllClub, ownerClubDetails, updateManager } from "../../controllers/Club/Club.js";
 
 const router = express.Router();
 
@@ -21,5 +21,6 @@ router.post("/add-employee",addEmployee)
 router.get("/all-clubs", getAllClub);
 router.post("/create-club", createClub);
 router.put("/update-club", updateManager);
+router.get("/club-details/:clubId", ownerClubDetails);
 
 export default router;

@@ -1,5 +1,5 @@
 import express from "express";
-import { bookingClub } from "../../../controllers/Partner/Club/Club.js";
+import { bookingClub } from "../../../controllers/Club/Club.js";
 
 const router = express.Router();
 

@@ -1,7 +1,7 @@
-import Owner from "../../../models/Owner/owner.js";
-import Club from "../../../models/Partner/Club/clubSchema.js";
-import Partner from "../../../models/Partner/Employee.js";
-import { log } from "console";
+import Owner from "../../models/Owner/owner.js";
+import ClubReach from "../../models/Partner/Club/clubReach.js";
+import Club from "../../models/Partner/Club/clubSchema.js";
+import Partner from "../../models/Partner/Employee.js";
 
 // Controller to create a new club
 // This function assumes that the owner is an Owner and the manager is a Partner
@@ -38,10 +38,12 @@ export const createClub = async (req, res) => {
 
   if (!coordinates || !Array.isArray(coordinates) || coordinates.length !== 2) {
     return res.status(400).json({ message: "Valid coordinates are required." });
-  } 
+  }
 
-  if(!openTiming || !closeTiming) {
-    return res.status(400).json({ message: "Open and close timings are required." });
+  if (!openTiming || !closeTiming) {
+    return res
+      .status(400)
+      .json({ message: "Open and close timings are required." });
   }
 
   try {
@@ -111,21 +113,61 @@ export const createClub = async (req, res) => {
 };
 
 // get club
-export const getAllClub = async(req,res)=>{
-  const {userId} = req.query;
-  try{
-    if(!userId){
+export const getAllClub = async (req, res) => {
+  const { userId } = req.query;
+  try {
+    if (!userId) {
       return res.status(400).json({ message: "User ID is required." });
     }
 
-    const clubs = await Club.find({owner:userId});
+    const clubs = await Club.find({ owner: userId });
     return res.status(200).json({ clubs });
-  }
-  catch(err){
+  } catch (err) {
     console.error("Error fetching clubs:", err);
     return res.status(500).json({ message: "Internal server error." });
   }
-}
+};
+
+export const ownerClubDetails = async (req, res) => {
+  const { clubId } = req.params;
+
+  if (!clubId) {
+    return res.status(400).json({ message: "Club ID is required." });
+  }
+
+  try {
+    // Get club with owner info
+    const club = await Club.findById(clubId)
+      .populate("owner", "name email");
+
+    // Get club reach analytics
+    const clubReach = await ClubReach.findOne({ clubId });
+
+    // Get employees for this club
+    const employees = await Partner.find({ club: clubId })
+      .select("name email mobile position profilePicture");
+    
+    console.log("Employees:", employees);
+
+    // Get the partner manager for this club
+    const manager = employees.filter(emp => emp.position.toLowerCase() === "manager");
+
+    if (!club) {
+      return res.status(404).json({ message: "Club not found." });
+    }
+
+    return res.status(200).json({
+      message: "Club details fetched successfully.",
+      club,
+      clubReach,
+      employees,   // includes all employees
+      manager     // just those with position manager
+    });
+  } catch (err) {
+    console.error("Error fetching club details:", err);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
 
 // Controller to update the manager of a specific club
 // This function assumes that the manager is a Partner and the owner is an Owner
@@ -285,3 +327,5 @@ export const bookingClub = async (req, res) => {
     res.status(500).json({ message: "Internal server error." });
   }
 };
+
+// ------------------- CLUBS REACH -------------------

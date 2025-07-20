@@ -98,6 +98,7 @@ app.get("/api/v1", (req, res) => {
 app.use("/api/v1", userRoute);
 app.use("/api/v1/employee", employeeRoute);
 app.use("/api/v1/owner", ownerRoute);
+// app.use("api/v1/club",)
 
 // Catch-all for unmatched routes
 app.use((req, res) => {

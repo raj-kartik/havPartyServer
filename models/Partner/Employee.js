@@ -18,12 +18,10 @@ const employeeSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "Owner", // Reference to the User model
   },
-  club: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Club", // Reference to the Club model
-    },
-  ],
+  club: {
+    type: Schema.Types.ObjectId,
+    ref: "Club", // Reference to the Club model
+  },
   registration_date: {
     type: Date,
     default: Date.now,
