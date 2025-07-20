@@ -1,8 +1,7 @@
 import Owner from "../../models/Owner/owner.js";
 import ClubReach from "../../models/Partner/Club/clubReach.js";
-import Club from "../../models/Partner/Club/clubSchema.js";
+import Club, { Offer } from "../../models/Partner/Club/clubSchema.js";
 import Partner from "../../models/Partner/Employee.js";
-
 // Controller to create a new club
 // This function assumes that the owner is an Owner and the manager is a Partner
 export const createClub = async (req, res) => {
@@ -137,37 +136,43 @@ export const ownerClubDetails = async (req, res) => {
 
   try {
     // Get club with owner info
-    const club = await Club.findById(clubId)
-      .populate("owner", "name email");
+    const club = await Club.findById(clubId).populate("owner", "name email");
+
+    if (!club) {
+      return res.status(404).json({ message: "Club not found." });
+    }
 
     // Get club reach analytics
     const clubReach = await ClubReach.findOne({ clubId });
 
     // Get employees for this club
     const employees = await Partner.find({ club: clubId })
-      .select("name email mobile position profilePicture");
-    
-    console.log("Employees:", employees);
+      .select("name email mobile position profilePicture club")
+      .populate("club", "name");
 
-    // Get the partner manager for this club
-    const manager = employees.filter(emp => emp.position.toLowerCase() === "manager");
+    // Get the partner manager(s)
+    const manager = employees.filter(
+      (emp) => emp.position?.toLowerCase() === "manager"
+    );
 
-    if (!club) {
-      return res.status(404).json({ message: "Club not found." });
-    }
+    // Get all offers for this club with full detail and club name
+    const offers = await Offer.find({ club: clubId }).populate("club", "name");
 
     return res.status(200).json({
       message: "Club details fetched successfully.",
+      status: 200,
       club,
       clubReach,
-      employees,   // includes all employees
-      manager     // just those with position manager
+      employees,
+      manager,
+      offers, // contains full offer details including populated club name
     });
   } catch (err) {
     console.error("Error fetching club details:", err);
     return res.status(500).json({ message: "Internal server error." });
   }
 };
+
 
 // Controller to update the manager of a specific club
 // This function assumes that the manager is a Partner and the owner is an Owner

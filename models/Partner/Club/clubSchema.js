@@ -47,6 +47,11 @@ const OfferSchema = new Schema({
     type: String,
     required: true,
   },
+  club: {
+    type: Schema.Types.ObjectId,
+    ref: "Club",
+    required: true,
+  },
   description: {
     type: String,
     required: true,
@@ -139,7 +144,7 @@ const ClubSchema = new Schema({
   maxClubCapacity: {
     type: Number,
   },
-  clubCapacity:{
+  clubCapacity: {
     type: Number,
     default: 0,
   },
