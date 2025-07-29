@@ -1,6 +1,7 @@
 import Owner from "../../models/Owner/owner.js";
 import ClubReach from "../../models/Partner/Club/clubReach.js";
 import Club, { Offer } from "../../models/Partner/Club/clubSchema.js";
+import Employee from "../../models/Partner/Employee.js";
 import Partner from "../../models/Partner/Employee.js";
 // Controller to create a new club
 // This function assumes that the owner is an Owner and the manager is a Partner
@@ -114,13 +115,30 @@ export const createClub = async (req, res) => {
 // get club
 export const getAllClub = async (req, res) => {
   const { userId } = req.query;
+
+  if (!userId) {
+    return res.status(400).json({ message: "User ID is required." });
+  }
+
   try {
-    if (!userId) {
-      return res.status(400).json({ message: "User ID is required." });
+    // Try finding user as Owner
+    const owner = await Owner.findById(userId);
+
+    if (owner) {
+      // If Owner found, return all clubs owned by them
+      const clubs = await Club.find({ owner: userId });
+      return res.status(200).json({ clubs });
     }
 
-    const clubs = await Club.find({ owner: userId });
-    return res.status(200).json({ clubs });
+    // Try finding user as Employee
+    const employee = await Employee.findById(userId);
+
+    if (employee) {
+      const club = await Club.findById(employee.club);
+      return res.status(200).json({ clubs: club ? [club] : [] });
+    }
+
+    return res.status(404).json({ message: "User not found." });
   } catch (err) {
     console.error("Error fetching clubs:", err);
     return res.status(500).json({ message: "Internal server error." });
