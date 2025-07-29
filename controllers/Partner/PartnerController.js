@@ -100,7 +100,7 @@ export const getEmployee = async (req, res) => {
 };
 
 export const getEmployeeDetails = async (req, res) => {
-  const { partnerId } = req.body;
+  const { partnerId } = req.params;
 
   if (!partnerId)
     return res.status(400).json({ message: "Please provide Club ID" });

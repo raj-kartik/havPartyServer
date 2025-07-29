@@ -15,7 +15,8 @@ import userRoute from "./routes/User/index.js";
 import employeeRoute from "./routes/Partner/index.js";
 import ownerRoute from "./routes/Owner/owner.js";
 import { verifyToken } from "./middlewares/middlware.js";
-import { ownerSignIn } from "./controllers/Owner/Owner.js";
+// import { ownerSignIn } from "./controllers/Owner/Owner.js";
+import { signInClub } from "./controllers/Signin.js";
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -56,10 +57,8 @@ const allowedPaths = [
   "/api/v1/admin/signin",
   "/api/v1/auth/signin",
   "/api/v1/auth/signup",
-  // "/api/v1/employee/auth/signup",
-  "/api/v1/employee/auth/signin",
+  "/api/v1/club/signin", // club owner or manager signin
   "/api/v1/owner/signup",
-  "/api/v1/owner/signin",
   "/api/v1/owner/employees",
   "/api/v1/owner/employee/details",
 ];
@@ -94,7 +93,7 @@ app.get("/api/v1", (req, res) => {
 app.use("/api/v1", userRoute);
 app.use("/api/v1/employee", employeeRoute);
 app.use("/api/v1/owner", ownerRoute);
-// app.post("api/v1/club/signin",ownerSignIn);
+app.post("/api/v1/club/signin",signInClub);
 
 // ✅ 404 for unmatched routes
 app.use((req, res) => {

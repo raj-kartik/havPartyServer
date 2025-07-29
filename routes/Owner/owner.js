@@ -15,15 +15,15 @@ router.post("/signin", ownerSignIn);
 router.get("/details", ownerDetails);
 
 // employee
-router.get("/employees", getEmployee);
+router.get("/all-employees", getEmployee);
 router.get("/employee/details", getEmployeeDetails);
 router.post("/add-employee",addEmployee)
-router.put("/update-manager", updateManager);
 
+// router.put("/update-manager", updateManager);
 // club
-router.get("/all-clubs", getAllClub);
+router.get("/club/all-clubs", getAllClub);
 router.post("/create-club", createClub);
-router.get("/club-details/:clubId", ownerClubDetails); // can use for partner as well
+router.get("/club/club-details/:clubId", ownerClubDetails); // can use for partner as well
 
 // offer 
 router.post("/add-offer", OfferCreatedByClubers); // Assuming addOfferToClub is defined in the controller
