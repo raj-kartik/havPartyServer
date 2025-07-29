@@ -30,6 +30,10 @@ const employeeSchema = new Schema({
     type: Boolean,
     default: true,
   },
+  isBlocked: {
+    type: Boolean,
+    default: false,
+  },
   password: {
     type: String,
     required: true,

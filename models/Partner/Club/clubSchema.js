@@ -83,6 +83,13 @@ const ClubSchema = new Schema({
     type: String,
     required: true,
   },
+  // Add this in ClubSchema
+  employees: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Partner",
+    },
+  ],
   openTiming: {
     type: String, // Format: "HH:mm"
     required: true,

@@ -7,7 +7,7 @@ export const ownerSignUp = async (req, res) => {
   const { name, email, mobile, password } = req.body;
 
   if ((!name, !email, !mobile, !password))
-    return res.status(500).json({
+    return res.status(400).json({
       message: "All fields are required",
     });
 
@@ -47,40 +47,48 @@ export const ownerSignUp = async (req, res) => {
 export const ownerSignIn = async (req, res) => {
   const { mobile, password } = req.body;
 
-  if ((!mobile, !password))
-    return res.status(500).json({
-      message: "All fields are required",
-    });
+  if (!mobile || !password) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
 
   try {
     const user = await Owner.findOne({ contact_number: mobile });
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(404).json({ message: "User not found" });
     }
 
     if (user.isBlocked || user.isBanned) {
-      return res.status(403).json({ message: "User is blocked or banned." });
+      return res.status(403).json({ message: "User is blocked or banned" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid credentials." });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Generate a never-expiring JWT token
     const token = jwt.sign(
-      { ownerId: user._id, email: user?.email, mobile: user?.mobile },
-      process.env.JWT_SECRET // No 'expiresIn' option means the token will not expire
+      {
+        id: user._id,
+        type: "owner",
+      },
+      process.env.JWT_SECRET
     );
 
-    // Respond with user details and token
+    const { _id, name, email, contact_number } = user;
+
     return res.status(200).json({
-      message: "Login successful.",
-      user,
+      message: "Login successful",
+      user: {
+        _id,
+        name,
+        email,
+        mobile: contact_number,
+        type: "owner",
+      },
       token,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Owner SignIn Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -97,7 +105,7 @@ export const ownerDetails = async (req, res) => {
     }
 
     const decoded = jwt.verify(ticket, process.env.JWT_SECRET);
-    const owner = await Owner.findById(decoded.ownerId).select("-password");
+    const owner = await Owner.findById(decoded.id).select("-password");
 
     if (!owner) {
       return res.status(404).json({ message: "Owner not found" });

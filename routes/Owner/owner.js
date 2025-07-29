@@ -3,7 +3,8 @@ import { ownerDetails, ownerSignIn, ownerSignUp } from "../../controllers/Owner/
 import { addEmployee, getEmployee, getEmployeeDetails } from "../../controllers/Partner/PartnerController.js";
 import { createClub, getAllClub, ownerClubDetails, updateManager } from "../../controllers/Club/Club.js";
 import { OfferCreatedByClubers } from "../../controllers/Offers/OwnerOffer.js";
-
+import transactions from './Transaction/transaction.js'
+import events from '../Events/events.js'
 const router = express.Router();
 
 // post
@@ -17,14 +18,22 @@ router.get("/details", ownerDetails);
 router.get("/employees", getEmployee);
 router.get("/employee/details", getEmployeeDetails);
 router.post("/add-employee",addEmployee)
+router.put("/update-manager", updateManager);
 
 // club
 router.get("/all-clubs", getAllClub);
 router.post("/create-club", createClub);
-router.put("/update-club", updateManager);
-router.get("/club-details/:clubId", ownerClubDetails);
+router.get("/club-details/:clubId", ownerClubDetails); // can use for partner as well
 
 // offer 
 router.post("/add-offer", OfferCreatedByClubers); // Assuming addOfferToClub is defined in the controller
+// update offer
+// disable offer
+// delete offers
+
+// transactions
+router.use("/transaction", transactions);
+router.use("/events",events)
+
 
 export default router;

@@ -129,7 +129,7 @@ export const getAllClub = async (req, res) => {
 
 export const ownerClubDetails = async (req, res) => {
   const { clubId } = req.params;
-
+  const { ownerId, partnerId } = req.use;
   if (!clubId) {
     return res.status(400).json({ message: "Club ID is required." });
   }
@@ -173,16 +173,15 @@ export const ownerClubDetails = async (req, res) => {
   }
 };
 
-
 // Controller to update the manager of a specific club
 // This function assumes that the manager is a Partner and the owner is an Owner
 export const updateManager = async (req, res) => {
-  const { clubId, managerId, ownerId } = req.body;
+  const { clubId, employeeId, ownerId } = req.body;
 
   // Validate required fields
-  if (!clubId || !managerId || !ownerId) {
+  if (!clubId || !employeeId || !ownerId) {
     return res.status(400).json({
-      message: "Club ID, Manager ID, and Owner ID are all required.",
+      message: "Club ID, Employee ID, and Owner ID are all required.",
     });
   }
 
@@ -211,21 +210,21 @@ export const updateManager = async (req, res) => {
     }
 
     // Find the manager
-    const manager = await Partner.findById(managerId);
+    const manager = await Partner.findById(employeeId);
     if (!manager) {
-      return res.status(404).json({ message: "Manager not found." });
+      return res.status(404).json({ message: "Employee not found." });
     }
 
     // Update manager
-    club.manager = managerId;
+    club.manager = employeeId;
     await club.save();
 
     return res.status(200).json({
-      message: "Manager updated successfully.",
+      message: "Employee updated successfully.",
       club,
     });
   } catch (err) {
-    console.error("Error updating manager:", err);
+    console.error("Error updating Employee:", err);
     return res.status(500).json({ message: "Internal server error." });
   }
 };

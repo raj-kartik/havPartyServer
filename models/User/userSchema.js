@@ -4,11 +4,6 @@ import bcrypt from "bcrypt";
 const { Schema } = mongoose;
 
 const userSchema = new Schema({
-  username: {
-    type: String,
-    required: true,
-    unique: true,
-  },
   name: {
     type: String,
     required: true,
@@ -28,9 +23,15 @@ const userSchema = new Schema({
     unique: true,
     match: /.+\@.+\..+/,
   },
-  password: {
+  mobile: {
     type: String,
     required: true,
+    unique: true,
+    match: /^[6-9]\d{9}$/, // For Indian mobile numbers
+  },
+  password: {
+    type: String,
+    required: false,
   },
   isBlocked: {
     type: Boolean,
@@ -54,17 +55,24 @@ const userSchema = new Schema({
       default: [],
     },
   ],
-  bookingHistory: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "UserBookingHistory",
-      default: [],
-    },
-  ],
   clubLikes: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Club",
+      default: [],
+    },
+  ],
+  eventsBookings: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "EventBooking",
+      default: [],
+    },
+  ],
+  dailyBookings: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DailyBooking",
       default: [],
     },
   ],
