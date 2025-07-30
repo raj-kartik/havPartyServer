@@ -2,7 +2,7 @@ import express from "express";
 import { ownerDetails, ownerSignIn, ownerSignUp } from "../../controllers/Owner/Owner.js";
 import { addEmployee, getEmployee, getEmployeeDetails } from "../../controllers/Partner/PartnerController.js";
 import { createClub, getAllClub, ownerClubDetails, updateManager } from "../../controllers/Club/Club.js";
-import { OfferCreatedByClubers } from "../../controllers/Offers/OwnerOffer.js";
+import { getOffersByClub, OfferCreatedByClubers } from "../../controllers/Offers/OwnerOffer.js";
 import transactions from './Transaction/transaction.js'
 import events from '../Events/events.js'
 const router = express.Router();
@@ -26,7 +26,8 @@ router.post("/create-club", createClub);
 router.get("/club/club-details/:clubId", ownerClubDetails); // can use for partner as well
 
 // offer 
-router.post("/add-offer", OfferCreatedByClubers); // Assuming addOfferToClub is defined in the controller
+router.post("/club/add-offer", OfferCreatedByClubers); // Assuming addOfferToClub is defined in the controller
+router.get("/club/offers",getOffersByClub)
 // update offer
 // disable offer
 // delete offers

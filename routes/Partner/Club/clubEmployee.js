@@ -1,4 +1,3 @@
-import Club from "../../../models/Partner/Club/clubSchema.js";
 import Employee from "../../../models/Partner/Employee.js";
 
 export const getEmployeesListToManager = async (req, res) => {

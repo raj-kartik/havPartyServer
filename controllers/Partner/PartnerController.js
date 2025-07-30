@@ -6,36 +6,25 @@ export const addEmployee = async (req, res) => {
   const { position, name, email, mobile, clubId, password, ownerId } = req.body;
 
   if (!position || !name)
-    return res.status(400).json({
-      message: "Please provide position and name",
-    });
+    return res.status(400).json({ message: "Please provide position and name" });
 
   if (!email || !mobile)
-    return res.status(400).json({
-      message: "Please provide e-mail and mobile",
-    });
+    return res.status(400).json({ message: "Please provide e-mail and mobile" });
 
   if (!clubId)
-    return res.status(400).json({
-      message: "Please provide Club Id",
-    });
+    return res.status(400).json({ message: "Please provide Club Id" });
 
   if (!password)
-    return res.status(400).json({
-      message: "Please provide Password",
-    });
-  
+    return res.status(400).json({ message: "Please provide Password" });
+
   if (!ownerId)
-    return res.status(400).json({
-      message: "Please provide Owner Id",
-    });
+    return res.status(400).json({ message: "Please provide Owner Id" });
 
   try {
     const existingUser = await Partner.findOne({
-      $or: [{ email }, { mobile }] // Check for existing email, mobile, or ownerId
+      $or: [{ email }, { mobile }]
     });
 
-    console.log("Existing User:", existingUser);
     if (existingUser) {
       return res.status(400).json({
         message: "Mobile or email already exists",
@@ -49,20 +38,28 @@ export const addEmployee = async (req, res) => {
       name,
       email,
       mobile,
-      // clubId,
       position,
       club: clubId,
-      password:hashedPassword,
-      ownerId, // Associate the employee with the owner
-      profilePicture: "", // Default profile picture URL
+      password: hashedPassword,
+      ownerId,
+      profilePicture: "",
     });
 
     await partner.save();
+
+    // 👇 Add partner._id to club.employees array
+    await Club.findByIdAndUpdate(
+      clubId,
+      { $addToSet: { employees: partner._id } }, // Prevents duplicate entries
+      { new: true }
+    );
+
     res.status(200).json({
-      message: "new partner has joined",
+      message: "New member has joined",
       state: 200,
       partner,
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
