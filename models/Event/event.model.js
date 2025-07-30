@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, Types } from 'mongoose';
+import mongoose, { Schema, model, Types } from "mongoose";
 
 const timeSlotSchema = new Schema({
   startTime: {
@@ -11,18 +11,28 @@ const timeSlotSchema = new Schema({
   },
 });
 
+const entrySchema = new Schema({
+  type: {
+    type: String,
+    required: true,
+    enum: ["stags", "couples", "girls"], // or allow dynamic types if needed
+  },
+  price: {
+    type: Number,
+    required: true,
+    min: 0,
+  },
+});
+
 const dateSchema = new Schema({
   date: {
     type: Date,
     required: true,
   },
-  prices: {
-    type: Map,
-    of: Number, // entry types: stag, couple, girls, etc.
-    required: true,
-  },
+  entry: [entrySchema],
   timeSlots: [timeSlotSchema],
 });
+
 
 const eventSchema = new Schema(
   {
@@ -39,7 +49,7 @@ const eventSchema = new Schema(
     },
     clubId: {
       type: Schema.Types.ObjectId,
-      ref: 'Club',
+      ref: "Club",
       required: true,
     },
     dates: [dateSchema],
@@ -63,12 +73,12 @@ const eventSchema = new Schema(
     createdBy: {
       type: Schema.Types.ObjectId,
       required: true,
-      refPath: 'createdByModel',
+      refPath: "createdByModel",
     },
     createdByModel: {
       type: String,
       required: true,
-      enum: ['Owner', 'Employee'],
+      enum: ["Owner", "Employee"],
     },
   },
   {
@@ -77,15 +87,17 @@ const eventSchema = new Schema(
 );
 
 // Allow only Managers (if createdBy is Employee)
-eventSchema.pre('save', async function (next) {
-  if (this.createdByModel === 'Employee') {
-    const Employee = mongoose.model('Employee');
+eventSchema.pre("save", async function (next) {
+  if (this.createdByModel === "Employee") {
+    const Employee = mongoose.model("Employee");
     const employee = await Employee.findById(this.createdBy);
-    if (!employee || employee.position !== 'Manager') {
-      return next(new Error('Only employees with Manager position can create events.'));
+    if (!employee || employee.position !== "Manager") {
+      return next(
+        new Error("Only employees with Manager position can create events.")
+      );
     }
   }
   next();
 });
 
-export const Event = model('Event', eventSchema);
+export const Event = model("Event", eventSchema);
