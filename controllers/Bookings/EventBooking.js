@@ -1,10 +1,8 @@
 import EventBooking from "../../models/Booking/EventBooking.js";
+import { Event } from "../../models/Event/Event.model.js";
 import Owner from "../../models/Owner/owner.js";
 import Employee from "../../models/Partner/Employee.js";
 import User from "../../models/User/userSchema.js";
-// import EventBooking from "../../models/Booking/EventBooking";
-// import Owner from "../../models/Owner/owner";
-// import Employee from "../../models/Partner/Employee";
 
 // CLUB
 export const getBookingOfEventToClub = async (req, res) => {
@@ -195,47 +193,41 @@ export const getBookingEventListToUser = async (req, res) => {
 // CLUB
 export const getBookingListOfEventToClub = async (req, res) => {
   const { eventId } = req.params;
-  const { clubId } = req.query;
-  // console.log("---- req.user -----",req);
-  // return res.status(200).json({ message: "Please provide EventId", data:req })
-
-  const { ownerId, partnerId } = req.user;
-
+  const { id, type } = req.user;
 
   if (!eventId) {
-    return res.status(400).json({ message: "Please provide EventId" });
-  }
-
-  if (!clubId) {
-    return res.status(400).json({ message: "Please provide ClubId" });
+    return res.status(400).json({ message: "Please provide eventId" });
   }
 
   try {
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    const eventClubId = event.clubId?.toString();
     let isAuthorized = false;
 
-    if (ownerId) {
-      const owner = await Owner.findById(ownerId);
-
-      // console.log("---- owner ----", owner);
-      if (owner && owner.clubs_owned.some(id => id.toString() === clubId)) {
+    if (type === "owner") {
+      const owner = await Owner.findById(id);
+      if (owner?.clubs_owned?.some(club => club.toString() === eventClubId)) {
         isAuthorized = true;
       }
-    } else if (partnerId) {
-      const employee = await Employee.findById(partnerId);
-      if (employee && employee.clubId.toString() === clubId) {
+    } else {
+      const employee = await Employee.findById(id);
+      if (employee?.club?.toString() === eventClubId) {
         isAuthorized = true;
       }
     }
 
     if (!isAuthorized) {
-      return res.status(403).json({ message: "Access denied for this club" });
+      return res.status(403).json({ message: "Access denied for this event" });
     }
 
-    const bookings = await EventBooking.find({ eventId, clubId })
+    const bookings = await EventBooking.find({ eventId })
       .populate("clubId", "name")
       .populate("eventId", "title date")
-      .populate("userId", "name email mobile")
-      // .populate("promoterId", "name");
+      .populate("userId", "name email mobile");
 
     return res.status(200).json({
       message: "Bookings fetched successfully",
@@ -250,5 +242,6 @@ export const getBookingListOfEventToClub = async (req, res) => {
     });
   }
 };
+
 
 // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvd25lcklkIjoiNjg2ZmI3Mjg5MTI4Y2NlMDdmYTQ4ODFmIiwiZW1haWwiOiJyYWprYXJ0aWsxNTlAZ21haWwuY29tIiwiaWF0IjoxNzUzNjg3ODQ4fQ.0l1oA9I8FlH-lueuOjFes69EUra7GWM5bhWP3txXPFE

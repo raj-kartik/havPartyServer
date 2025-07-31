@@ -1,5 +1,6 @@
 import bcryptjs from "bcryptjs";
 import Partner from "../../models/Partner/Employee.js";
+import Club from "../../models/Partner/Club/clubSchema.js";
 
 
 export const addEmployee = async (req, res) => {

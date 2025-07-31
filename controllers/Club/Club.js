@@ -126,7 +126,7 @@ export const getAllClub = async (req, res) => {
 
     if (owner) {
       // If Owner found, return all clubs owned by them
-      const clubs = await Club.find({ owner: userId });
+      const clubs = await Club.find({ owner: userId, isDelete: { $ne: true } });
       return res.status(200).json({ clubs });
     }
 
@@ -147,7 +147,7 @@ export const getAllClub = async (req, res) => {
 
 export const ownerClubDetails = async (req, res) => {
   const { clubId } = req.params;
-  const { ownerId, partnerId } = req.use;
+  // const { id} = req.user;
   if (!clubId) {
     return res.status(400).json({ message: "Club ID is required." });
   }
@@ -250,8 +250,7 @@ export const updateManager = async (req, res) => {
 // Controller to add an offer to a specific club
 // This function assumes that the offer is added by a Partner and the club belongs to an Owner
 export const addOfferToClub = async (req, res) => {
-  const { clubId, title, description, discount, validFrom, validUntil, terms } =
-    req.body;
+  const { clubId, title, description, discount, validFrom, validUntil, terms } = req.body;
 
   // Validate required fields
   if (!clubId) {
@@ -263,10 +262,10 @@ export const addOfferToClub = async (req, res) => {
   }
 
   try {
-    // Find the club by ID
-    const club = await Club.findById(clubId);
+    // Find the club by ID only if it is not deleted
+    const club = await Club.findOne({ _id: clubId, isDelete: { $ne: true } });
     if (!club) {
-      return res.status(404).json({ message: "Club not found." });
+      return res.status(404).json({ message: "Club not found or has been deleted." });
     }
 
     // Create the new offer
@@ -300,24 +299,27 @@ export const addOfferToClub = async (req, res) => {
 // This function assumes that the booking is made by a user and the club has a bookings array
 export const bookingClub = async (req, res) => {
   const { userId, clubId, bookingDate, bookingTime, numberOfPeople } = req.body;
+
   // Validate required fields
   if (!userId || !clubId || !bookingDate || !bookingTime) {
-    return res
-      .status(400)
-      .json({ message: "All booking fields are required." });
+    return res.status(400).json({ message: "All booking fields are required." });
   }
 
   if (numberOfPeople <= 0) {
-    return res
-      .status(400)
-      .json({ message: "Number of people must be greater than zero." });
+    return res.status(400).json({ message: "Number of people must be greater than zero." });
   }
 
   try {
     // Find the club by ID
     const club = await Club.findById(clubId);
+
     if (!club) {
       return res.status(404).json({ message: "Club not found." });
+    }
+
+    // Prevent booking if the club is marked as deleted
+    if (club.isDelete) {
+      return res.status(403).json({ message: "This club is no longer available for booking." });
     }
 
     // Create the new booking
@@ -329,14 +331,10 @@ export const bookingClub = async (req, res) => {
       clubId,
     };
 
-    console.log("====================================");
-    console.log("New Booking Details:", newBooking);
-    console.log("====================================");
-
     // Add the booking to the club's bookings array
     club.bookings.push(newBooking);
 
-    // Save the club with the new booking
+    // Save the updated club document
     await club.save();
 
     res.status(201).json({
@@ -351,3 +349,52 @@ export const bookingClub = async (req, res) => {
 };
 
 // ------------------- CLUBS REACH -------------------
+
+export const updateDeleteClub = async (req, res) => {
+  const { clubId } = req.params;
+  const { id } = req.user;
+
+  if (!clubId) {
+    return res.status(400).json({ message: "Club ID is required." });
+  }
+
+  try {
+    // Find the club
+    const club = await Club.findById(clubId);
+    if (!club) {
+      return res.status(404).json({ message: "Club not found." });
+    }
+
+    // Find the owner
+    const owner = await Owner.findById(id);
+    if (!owner) {
+      return res.status(404).json({ message: "Owner not found." });
+    }
+
+    // Verify that the club belongs to the owner
+    const ownsClub = owner.clubs_owned.some(
+      (ownedClubId) => ownedClubId.toString() === clubId
+    );
+
+    if (!ownsClub) {
+      return res
+        .status(403)
+        .json({ message: "Unauthorized to update or delete this club." });
+    }
+
+    // Update the isDelete field to true
+    const updatedClub = await Club.findByIdAndUpdate(
+      clubId,
+      { isDelete: true },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      message: "Club deleted successfully.",
+      updatedClub,
+    });
+  } catch (err) {
+    console.error("Error updating or deleting club:", err);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};

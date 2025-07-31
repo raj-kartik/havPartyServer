@@ -94,37 +94,58 @@ export const OfferCreatedByClubers = async (req, res) => {
 
 export const getOffersByClub = async (req, res) => {
   try {
-    const { id } = req.user; // Assuming user ID is available in req.user
+    const { id } = req.user; // Authenticated user ID
+
     const owner = await Owner.findById(id);
     const employee = await Employee.findById(id);
 
+    // If the user is an owner
     if (owner) {
       const clubs = await Club.find({ owner: id }).populate("offers");
+
       if (!clubs || clubs.length === 0) {
         return res
           .status(404)
           .json({ message: "No clubs found for this owner." });
       }
-      return res
-        .status(200)
-        .json({ message: "Clubs and offers retrieved successfully.", clubs });
+
+      const allOffers = clubs.flatMap((club) =>
+        club.offers.map((offer) => ({
+          ...offer.toObject(),
+          clubName: club.name,
+          clubId: club._id,
+        }))
+      );
+
+      return res.status(200).json({
+        message: "Offers retrieved successfully.",
+        data: allOffers,
+      });
     }
 
+    // If the user is an employee
     if (employee) {
       const club = await Club.findOne({ employees: id }).populate("offers");
+
       if (!club) {
         return res
           .status(404)
           .json({ message: "No club found for this employee." });
       }
+
+      const offers = club.offers.map((offer) => ({
+        ...offer.toObject(),
+        clubName: club.name,
+        clubId: club._id,
+      }));
+
       return res.status(200).json({
-        message: "Club and offers retrieved successfully.",
-        data: club?.offers.map((offer) => ({
-          ...offer.toObject(), // ensures all fields are exposed
-          clubName: club.name,
-        })),
+        message: "Offers retrieved successfully.",
+        data: offers,
       });
     }
+
+    return res.status(403).json({ message: "Unauthorized user role." });
   } catch (error) {
     console.error("Error fetching offers:", error);
     return res.status(500).json({ message: "Internal server error." });

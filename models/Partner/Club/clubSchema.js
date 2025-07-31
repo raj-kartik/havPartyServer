@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { isDeleteExpression } from "typescript";
 const { Schema } = mongoose;
 
 // Drink subdocument schema
@@ -90,6 +91,12 @@ const ClubSchema = new Schema({
       ref: "Partner",
     },
   ],
+  events: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Event",
+    },
+  ],
   openTiming: {
     type: String, // Format: "HH:mm"
     required: true,
@@ -143,11 +150,6 @@ const ClubSchema = new Schema({
     ref: "Owner",
     required: true,
   },
-  partnerId: {
-    type: Schema.Types.ObjectId,
-    ref: "Partner",
-    required: false,
-  },
   maxClubCapacity: {
     type: Number,
   },
@@ -167,6 +169,10 @@ const ClubSchema = new Schema({
       ref: "User",
     },
   ],
+  isDelete:{
+    type: Boolean,
+    default: false,
+  }
 });
 
 // Geo index for location

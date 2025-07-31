@@ -1,7 +1,7 @@
 import express from "express";
 import { ownerDetails, ownerSignIn, ownerSignUp } from "../../controllers/Owner/Owner.js";
 import { addEmployee, getEmployee, getEmployeeDetails } from "../../controllers/Partner/PartnerController.js";
-import { createClub, getAllClub, ownerClubDetails, updateManager } from "../../controllers/Club/Club.js";
+import { createClub, getAllClub, ownerClubDetails, updateDeleteClub, updateManager } from "../../controllers/Club/Club.js";
 import { getOffersByClub, OfferCreatedByClubers } from "../../controllers/Offers/OwnerOffer.js";
 import transactions from './Transaction/transaction.js'
 import events from '../Events/events.js'
@@ -24,9 +24,10 @@ router.post("/add-employee",addEmployee)
 router.get("/club/all-clubs", getAllClub);
 router.post("/create-club", createClub);
 router.get("/club/club-details/:clubId", ownerClubDetails); // can use for partner as well
+router.put("/club/delete/:clubId",updateDeleteClub ); // Update manager for a club
 
 // offer 
-router.post("/club/add-offer", OfferCreatedByClubers); // Assuming addOfferToClub is defined in the controller
+router.post("/club/add-offers", OfferCreatedByClubers); // Assuming addOfferToClub is defined in the controller
 router.get("/club/offers",getOffersByClub)
 // update offer
 // disable offer

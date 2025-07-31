@@ -35,6 +35,7 @@ export const ownerSignUp = async (req, res) => {
         name: name,
         mobile: mobile,
         email: email,
+        type: "owner",
       },
       status: 200,
     });
@@ -122,6 +123,7 @@ export const ownerDetails = async (req, res) => {
         active: owner?.active, // Assuming active is a field in the Owner model
         isBlocked: owner?.isBlocked, // Assuming isBlocked is a field in the Owner model
         registration_date: owner?.registration_date,
+        type:"owner"
       },
       status: 200,
     });

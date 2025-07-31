@@ -78,7 +78,7 @@ const eventSchema = new Schema(
     createdByModel: {
       type: String,
       required: true,
-      enum: ["Owner", "Employee"],
+      enum: ["owner", "manager"],
     },
   },
   {

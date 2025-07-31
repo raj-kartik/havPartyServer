@@ -1,60 +1,57 @@
+import EventBooking from "../../models/Booking/EventBooking.js";
 import { Event } from "../../models/Event/Event.model.js";
 import Owner from "../../models/Owner/owner.js";
+import Club from "../../models/Partner/Club/clubSchema.js";
 import Employee from "../../models/Partner/Employee.js";
+import User from "../../models/User/userSchema.js";
+
 export const getAllEvents = async (req, res) => {
-  const { ownerId, partnerId } = req.query;
+  const { id } = req.user;
 
   try {
-    if (!ownerId && !partnerId) {
-      return res.status(400).json({
-        message: "Either ownerId or partnerId is required",
+    // Try to find as Owner first
+    const owner = await Owner.findById(id).populate("clubs_owned", "_id name");
+
+    if (owner && owner.clubs_owned.length > 0) {
+      const clubIds = owner.clubs_owned.map((club) => club._id);
+
+      const events = await Event.find({ clubId: { $in: clubIds } }).populate(
+        "clubId",
+        "name"
+      );
+
+      return res.status(200).json({
+        role: "owner",
+        events,
+        count: events.length,
       });
     }
 
-    let clubIds = [];
+    // If not found as Owner, try as Employee
+    const employee = await Employee.findById(id).populate(
+      "club",
+      "_id name position"
+    );
 
-    if (ownerId) {
-      const owner = await Owner.findById(ownerId).populate(
-        "clubs_owned",
-        "_id name"
-      );
-      if (!owner || !owner.clubs_owned.length) {
-        return res
-          .status(404)
-          .json({ message: "Owner not found or no clubs found" });
-      }
-      clubIds = owner.clubs_owned.map((club) => club._id);
+    if (!employee) {
+      return res
+        .status(404)
+        .json({ message: "User not found as Owner or Employee" });
     }
 
-    if (partnerId) {
-      const employee = await Employee.findById(partnerId).populate(
-        "club",
-        "_id name position"
-      );
-      if (!employee || !employee.club) {
-        return res
-          .status(404)
-          .json({ message: "Employee not found or not assigned to a club" });
-      }
-
-      if (employee.position !== "Manager") {
-        return res
-          .status(403)
-          .json({ message: "Only Managers can fetch events" });
-      }
-
-      // Employee club can be one or an array
-      clubIds = [employee.club._id];
+    if (employee.position !== "Manager") {
+      return res
+        .status(403)
+        .json({ message: "Only Managers can fetch events" });
     }
 
-    console.log("--- clubIds ----", clubIds);
-
-    const events = await Event.find({ clubId: { $in: clubIds } }).populate(
+    const events = await Event.find({ clubId: employee.club._id }).populate(
       "clubId",
       "name"
     );
 
     return res.status(200).json({
+      role: "employee",
       events,
       count: events.length,
     });
@@ -67,7 +64,63 @@ export const getAllEvents = async (req, res) => {
   }
 };
 
-export const getEventDetails = async (req, res) => {};
+export const getEventDetails = async (req, res) => {
+  const { eventId } = req.params;
+  const { id, type } = req.user;
+  const { clubId } = req.query;
+
+  try {
+    // Check if user is authorized (Owner or Manager)
+    let isAuthorized = false;
+
+    if (type === "owner") {
+      const owner = await Owner.findById(id);
+      if (owner) isAuthorized = true;
+    } else if (type === "manager") {
+      const employee = await Employee.findById(id);
+      if (employee && employee.position.toLowerCase() === "manager") isAuthorized = true;
+    }
+
+    if (!isAuthorized) {
+      return res.status(403).json({ message: "Unauthorized user" });
+    }
+
+    // Validate event existence in club
+    const club = await Club.findById(clubId);
+    if (!club || !club.events.includes(eventId)) {
+      return res.status(404).json({ message: "Event not found in this club" });
+    }
+
+    // Get event details
+    const event = await Event.findById(eventId);
+
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    // Get all event bookings
+    const bookings = await EventBooking.find({ eventId });
+
+    // Enrich each booking with user details
+    const bookingsWithUser = await Promise.all(
+      bookings.map(async (booking) => {
+        const user = await User.findById(booking.userId).select("-password"); // exclude sensitive info
+        return {
+          ...booking.toObject(),
+          user,
+        };
+      })
+    );
+
+    return res.status(200).json({
+      event,
+      bookings: bookingsWithUser,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error", error });
+  }
+};
 
 export const postCreateEvent = async (req, res) => {
   try {
@@ -85,14 +138,14 @@ export const postCreateEvent = async (req, res) => {
     } = req.body;
 
     // Validate creator identity
-    if (createdByModel === "Owner") {
+    if (createdByModel.toLowerCase() === "owner") {
       const owner = await Owner.findById(createdBy);
       if (!owner) {
         return res.status(400).json({ message: "Invalid owner ID" });
       }
-    } else if (createdByModel === "Employee") {
+    } else if (createdByModel === "employee") {
       const employee = await Employee.findById(createdBy);
-      if (!employee || employee.position !== "Manager") {
+      if (!employee || employee.position.toLowerCase() !== "manager") {
         return res
           .status(403)
           .json({ message: "Only Managers can create events." });
@@ -116,6 +169,12 @@ export const postCreateEvent = async (req, res) => {
     });
 
     await event.save();
+
+    await Club.findByIdAndUpdate(
+      clubId,
+      { $push: { events: event._id } },
+      { new: true, useFindAndModify: false }
+    );
 
     res
       .status(200)
