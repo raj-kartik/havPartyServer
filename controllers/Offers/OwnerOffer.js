@@ -101,12 +101,13 @@ export const getOffersByClub = async (req, res) => {
 
     // If the user is an owner
     if (owner) {
-      const clubs = await Club.find({ owner: id }).populate("offers");
+      const clubs = await Club.find({ owner: id }).populate({
+        path: "offers",
+        match: { isDelete: false }, // ✅ Exclude deleted offers
+      });
 
       if (!clubs || clubs.length === 0) {
-        return res
-          .status(404)
-          .json({ message: "No clubs found for this owner." });
+        return res.status(404).json({ message: "No clubs found for this owner." });
       }
 
       const allOffers = clubs.flatMap((club) =>
@@ -125,12 +126,13 @@ export const getOffersByClub = async (req, res) => {
 
     // If the user is an employee
     if (employee) {
-      const club = await Club.findOne({ employees: id }).populate("offers");
+      const club = await Club.findOne({ employees: id }).populate({
+        path: "offers",
+        match: { isDelete: false }, // ✅ Exclude deleted offers
+      });
 
       if (!club) {
-        return res
-          .status(404)
-          .json({ message: "No club found for this employee." });
+        return res.status(404).json({ message: "No club found for this employee." });
       }
 
       const offers = club.offers.map((offer) => ({
@@ -148,6 +150,69 @@ export const getOffersByClub = async (req, res) => {
     return res.status(403).json({ message: "Unauthorized user role." });
   } catch (error) {
     console.error("Error fetching offers:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+export const putDeleteOffer = async (req, res) => {
+  const { offerId, isDelete } = req.body;
+
+  if (!offerId || typeof isDelete !== "boolean") {
+    return res
+      .status(400)
+      .json({ message: "offerId and isDelete(boolean) are required" });
+  }
+
+  try {
+    const offer = await Offer.findByIdAndUpdate(
+      offerId,
+      { isDelete },
+      { new: true }
+    );
+
+    if (!offer) {
+      return res.status(404).json({ message: "Offer not found" });
+    }
+
+    res.status(200).json({
+      message: `Offer ${isDelete ? "deleted" : "restored"} successfully`,
+      offer,
+      status: 200,
+    });
+  } catch (error) {
+    console.error("Error updating offer:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const updateOffer = async (req, res) => {
+  try {
+    const { offerId } = req.params;
+    const updateData = req.body;
+
+    if (!offerId) {
+      return res.status(400).json({ message: "Offer ID is required." });
+    }
+
+    const offer = await Offer.findById(offerId);
+
+    if (!offer || offer.isDelete) {
+      return res.status(404).json({ message: "Offer not found." });
+    }
+
+    // Update only provided fields
+    Object.keys(updateData).forEach((key) => {
+      offer[key] = updateData[key];
+    });
+
+    const updatedOffer = await offer.save();
+
+    return res.status(200).json({
+      message: "Offer updated successfully.",
+      data: updatedOffer,
+    });
+  } catch (error) {
+    console.error("Error updating offer:", error);
     return res.status(500).json({ message: "Internal server error." });
   }
 };

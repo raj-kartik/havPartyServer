@@ -29,6 +29,7 @@ router.put("/club/delete/:clubId",updateDeleteClub ); // Update manager for a cl
 // offer 
 router.post("/club/add-offers", OfferCreatedByClubers); // Assuming addOfferToClub is defined in the controller
 router.get("/club/offers",getOffersByClub)
+router.put("/club/delete-offer", OfferCreatedByClubers); // Assuming updateOffer is defined in the controller
 // update offer
 // disable offer
 // delete offers

@@ -73,6 +73,10 @@ const OfferSchema = new Schema({
     type: String,
     default: "",
   },
+  isDelete:{
+    type: Boolean,
+    default: false,
+  }
 });
 
 export const Offer =
