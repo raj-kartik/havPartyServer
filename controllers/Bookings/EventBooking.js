@@ -1,5 +1,5 @@
 import EventBooking from "../../models/Booking/EventBooking.js";
-import { Event } from "../../models/Event/Event.model.js";
+import { Event } from "../../models/Event/EventSchema.js";
 import Owner from "../../models/Owner/owner.js";
 import Employee from "../../models/Partner/Employee.js";
 import User from "../../models/User/userSchema.js";
