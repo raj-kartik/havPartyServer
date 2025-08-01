@@ -16,26 +16,19 @@ import bookingRoute from "./routes/Booking/bookingEvent.js";
 const app = express();
 const port = process.env.PORT || 8000;
 
+// ✅ Parse JSON bodies
 app.use(express.json());
-
-// ✅ Allow all origins with CORS
 app.use(
   cors({
-    origin: "*", // allow all origins
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin: (origin, callback) => {
+      // Allow all origins, including undefined (Postman, curl)
+      callback(null, true);
+    },
+    credentials: true, // if you ever need to send cookies
   })
 );
 
-// ✅ Handle preflight OPTIONS requests globally
-app.options("*", (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  return res.sendStatus(200);
-});
-
-// ✅ Required environment variables check
+// ✅ Check required environment variables
 if (!process.env.MONGO_URL) {
   console.error("❌ MONGO_URL not defined in .env");
   process.exit(1);
@@ -45,7 +38,7 @@ if (!process.env.JWT_SECRET) {
   process.exit(1);
 }
 
-// ✅ MongoDB connection
+// ✅ Connect to MongoDB
 mongoose
   .connect(process.env.MONGO_URL, { serverSelectionTimeoutMS: 5000 })
   .then(() => console.log("✅ Connected to MongoDB"))
@@ -54,7 +47,7 @@ mongoose
     process.exit(1);
   });
 
-// ✅ Public (non-authenticated) routes
+// ✅ Define public (non-authenticated) routes
 const allowedPaths = [
   "/api/v1",
   "/api/v1/admin/signin",
@@ -67,7 +60,7 @@ const allowedPaths = [
   "/api/v1/booking/event",
 ];
 
-// ✅ Allow dynamic route matching using path-to-regexp
+// ✅ Helper to match dynamic paths
 const isAllowedPath = (path) => {
   return allowedPaths.some((pattern) => {
     const regex = pathToRegexp(pattern);
@@ -75,11 +68,11 @@ const isAllowedPath = (path) => {
   });
 };
 
-// ✅ JWT middleware for secure routes
+// ✅ JWT Middleware (for protected routes)
 app.use((req, res, next) => {
   const cleanedPath = req.path.split("?")[0];
   if (allowedPaths.includes(cleanedPath) || isAllowedPath(cleanedPath)) {
-    return next(); // skip auth
+    return next(); // allow public routes
   }
   verifyToken(req, res, next);
 });
@@ -89,14 +82,14 @@ app.get("/api/v1", (req, res) => {
   res.send("🎉 Hav Party API is running!");
 });
 
-// ✅ Routes
+// ✅ Use routes
 app.use("/api/v1", userRoute);
 app.use("/api/v1/employee", employeeRoute);
 app.use("/api/v1/owner", ownerRoute);
 app.post("/api/v1/club/signin", signInClub);
 app.use("/api/v1/booking", bookingRoute);
 
-// ✅ 404 for unmatched routes
+// ✅ 404 handler
 app.use((req, res) => {
   console.log("Unhandled route:", req.method, req.path);
   res.status(404).json({ message: "Route not found" });
