@@ -210,6 +210,7 @@ export const updateOffer = async (req, res) => {
     return res.status(200).json({
       message: "Offer updated successfully.",
       data: updatedOffer,
+      status:200
     });
   } catch (error) {
     console.error("Error updating offer:", error);

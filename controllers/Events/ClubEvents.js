@@ -15,10 +15,10 @@ export const getAllEvents = async (req, res) => {
     if (owner && owner.clubs_owned.length > 0) {
       const clubIds = owner.clubs_owned.map((club) => club._id);
 
-      const events = await Event.find({ clubId: { $in: clubIds } }).populate(
-        "clubId",
-        "name"
-      );
+      const events = await Event.find({
+        clubId: { $in: clubIds },
+        isDelete: false, // Exclude soft-deleted events
+      }).populate("clubId", "name");
 
       return res.status(200).json({
         role: "owner",
@@ -28,10 +28,7 @@ export const getAllEvents = async (req, res) => {
     }
 
     // If not found as Owner, try as Employee
-    const employee = await Employee.findById(id).populate(
-      "club",
-      "_id name position"
-    );
+    const employee = await Employee.findById(id).populate("club", "_id name position");
 
     if (!employee) {
       return res
@@ -45,10 +42,10 @@ export const getAllEvents = async (req, res) => {
         .json({ message: "Only Managers can fetch events" });
     }
 
-    const events = await Event.find({ clubId: employee.club._id }).populate(
-      "clubId",
-      "name"
-    );
+    const events = await Event.find({
+      clubId: employee.club._id,
+      isDelete: false, // Exclude soft-deleted events
+    }).populate("clubId", "name");
 
     return res.status(200).json({
       role: "employee",
@@ -78,7 +75,8 @@ export const getEventDetails = async (req, res) => {
       if (owner) isAuthorized = true;
     } else if (type === "manager") {
       const employee = await Employee.findById(id);
-      if (employee && employee.position.toLowerCase() === "manager") isAuthorized = true;
+      if (employee && employee.position.toLowerCase() === "manager")
+        isAuthorized = true;
     }
 
     if (!isAuthorized) {
@@ -181,5 +179,50 @@ export const postCreateEvent = async (req, res) => {
       .json({ message: "Event created successfully", event, status: 200 });
   } catch (error) {
     res.status(500).json({ message: "Internal Server Error", error });
+  }
+};
+
+export const deleteEvent = async (req, res) => {
+  const { eventId } = req.params;
+  const user = req.user;
+
+  // Ensure user is authenticated and has the correct role
+  if (!user || (user.type !== "owner" && user.type !== "manager")) {
+    return res
+      .status(403)
+      .json({
+        message: "Unauthorized. Only owners or managers can delete events.",
+      });
+  }
+
+  if (!eventId) {
+    return res.status(400).json({ message: "Event ID is required." });
+  }
+
+  try {
+    const event = await Event.findById(eventId);
+
+    if (!event) {
+      return res.status(404).json({ message: "Event not found." });
+    }
+
+    // If already deleted
+    if (event.isDelete) {
+      return res.status(400).json({ message: "Event is already deleted." });
+    }
+
+    // Soft delete
+    event.isDelete = true;
+    await event.save();
+
+    return res
+      .status(200)
+      .json({
+        message: "Event deleted successfully (soft delete).",
+        status: 200,
+      });
+  } catch (error) {
+    console.error("Error deleting event:", error);
+    return res.status(500).json({ message: "Internal server error." });
   }
 };

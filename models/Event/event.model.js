@@ -33,7 +33,6 @@ const dateSchema = new Schema({
   timeSlots: [timeSlotSchema],
 });
 
-
 const eventSchema = new Schema(
   {
     title: {
@@ -67,6 +66,10 @@ const eventSchema = new Schema(
         type: String,
       },
     ],
+    isDelete:{
+      type: Boolean,
+      default: false,
+    },
     organizer: {
       type: String,
     },
@@ -78,7 +81,7 @@ const eventSchema = new Schema(
     createdByModel: {
       type: String,
       required: true,
-      enum: ["owner", "manager"],
+      enum: ["owner", "manager", "employee"], // Assuming these are the models that can create events
     },
   },
   {

@@ -49,6 +49,12 @@ const EventBookingSchema = new Schema(
       type: String,
       required: false,
     },
+    numberOfPeople:{
+      type: Number,
+      required: true,
+      default: 1,
+      min: 1,
+    },
     // specialRequests: {
     //   type: String,
     //   required: false,

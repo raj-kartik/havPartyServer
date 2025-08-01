@@ -17,6 +17,7 @@ import ownerRoute from "./routes/Owner/owner.js";
 import { verifyToken } from "./middlewares/middlware.js";
 // import { ownerSignIn } from "./controllers/Owner/Owner.js";
 import { signInClub } from "./controllers/Signin.js";
+import bookingRoute from "./routes/Booking/bookingEvent.js";
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -61,6 +62,7 @@ const allowedPaths = [
   "/api/v1/owner/signup",
   "/api/v1/owner/employees",
   "/api/v1/owner/employee/details",
+  "/api/v1/booking/event",
 ];
 
 // ✅ Allow dynamic route matching using path-to-regexp
@@ -94,6 +96,9 @@ app.use("/api/v1", userRoute);
 app.use("/api/v1/employee", employeeRoute);
 app.use("/api/v1/owner", ownerRoute);
 app.post("/api/v1/club/signin",signInClub);
+
+// booking routes
+app.use("/api/v1/booking",bookingRoute)
 
 // ✅ 404 for unmatched routes
 app.use((req, res) => {
