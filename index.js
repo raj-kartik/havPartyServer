@@ -1,21 +1,15 @@
-// import 'module-alias/register.js';
-// Load environment variables
 import dotenv from "dotenv";
 dotenv.config();
 
-// Import modules
-// ✅ Correct
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import { pathToRegexp } from "path-to-regexp";
 
-// Routes and middleware
 import userRoute from "./routes/User/index.js";
 import employeeRoute from "./routes/Partner/index.js";
 import ownerRoute from "./routes/Owner/owner.js";
 import { verifyToken } from "./middlewares/middlware.js";
-// import { ownerSignIn } from "./controllers/Owner/Owner.js";
 import { signInClub } from "./controllers/Signin.js";
 import bookingRoute from "./routes/Booking/bookingEvent.js";
 
@@ -24,14 +18,22 @@ const port = process.env.PORT || 8000;
 
 app.use(express.json());
 
+// ✅ Allow all origins with CORS
 app.use(
   cors({
-    origin: (origin, callback) => {
-      callback(null, true); // allow all origins
-    },
-    credentials: true,
+    origin: "*", // allow all origins
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// ✅ Handle preflight OPTIONS requests globally
+app.options("*", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  return res.sendStatus(200);
+});
 
 // ✅ Required environment variables check
 if (!process.env.MONGO_URL) {
@@ -58,7 +60,7 @@ const allowedPaths = [
   "/api/v1/admin/signin",
   "/api/v1/auth/signin",
   "/api/v1/auth/signup",
-  "/api/v1/club/signin", // club owner or manager signin
+  "/api/v1/club/signin",
   "/api/v1/owner/signup",
   "/api/v1/owner/employees",
   "/api/v1/owner/employee/details",
@@ -73,16 +75,12 @@ const isAllowedPath = (path) => {
   });
 };
 
-// ✅ Middleware for verifying JWT unless route is public
+// ✅ JWT middleware for secure routes
 app.use((req, res, next) => {
   const cleanedPath = req.path.split("?")[0];
-
-  // console.log("---- isAllowedPath(cleanedPath) in the middleware ----",allowedPaths.includes(cleanedPath));
-
-  if (allowedPaths.includes(cleanedPath)) {
-    return next(); // allow without token
+  if (allowedPaths.includes(cleanedPath) || isAllowedPath(cleanedPath)) {
+    return next(); // skip auth
   }
-  // secure routes
   verifyToken(req, res, next);
 });
 
@@ -91,14 +89,12 @@ app.get("/api/v1", (req, res) => {
   res.send("🎉 Hav Party API is running!");
 });
 
-// ✅ API route usage
+// ✅ Routes
 app.use("/api/v1", userRoute);
 app.use("/api/v1/employee", employeeRoute);
 app.use("/api/v1/owner", ownerRoute);
-app.post("/api/v1/club/signin",signInClub);
-
-// booking routes
-app.use("/api/v1/booking",bookingRoute)
+app.post("/api/v1/club/signin", signInClub);
+app.use("/api/v1/booking", bookingRoute);
 
 // ✅ 404 for unmatched routes
 app.use((req, res) => {
