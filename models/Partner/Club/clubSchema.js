@@ -73,10 +73,10 @@ const OfferSchema = new Schema({
     type: String,
     default: "",
   },
-  isDelete:{
+  isDelete: {
     type: Boolean,
     default: false,
-  }
+  },
 });
 
 export const Offer =
@@ -157,6 +157,10 @@ const ClubSchema = new Schema({
   maxClubCapacity: {
     type: Number,
   },
+  mobile: {
+    type: [String],
+    default: [],
+  },
   clubCapacity: {
     type: Number,
     default: 0,
@@ -173,10 +177,10 @@ const ClubSchema = new Schema({
       ref: "User",
     },
   ],
-  isDelete:{
+  isDelete: {
     type: Boolean,
     default: false,
-  }
+  },
 });
 
 // Geo index for location

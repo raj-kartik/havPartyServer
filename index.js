@@ -58,6 +58,8 @@ const allowedPaths = [
   "/api/v1/owner/employees",
   "/api/v1/owner/employee/details",
   "/api/v1/booking/event",
+  "/api/v1/booking/all-event",
+  "/api/v1/booking/event/:eventId",
 ];
 
 // ✅ Helper to match dynamic paths
