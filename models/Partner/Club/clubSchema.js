@@ -77,6 +77,10 @@ const OfferSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  isEnable: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 export const Offer =

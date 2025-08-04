@@ -8,9 +8,9 @@ router.get("/all-offers",getAllOfferToUser);
 router.get("/all-offer/:offerId",getOfferDetailsToUser)
 
 // user events
-router.post("/event",postUserBookingEvent);
+router.post("/book-event",postUserBookingEvent);
 router.get("/all-event",getAllEventsForUser);
-router.get("/event/:eventId",getEventDetailsForUser);
+router.get("/event-detail/:eventId",getEventDetailsForUser);
 
 // users daily event
 router.get("/all-clubs",getAllClubsForUser);

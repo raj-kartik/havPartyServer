@@ -116,6 +116,8 @@ export const getAllEventsForUser = async (req, res) => {
 };
 
 export const getEventDetailsForUser = async (req, res) => {
+
+    // console.log("Fetching event details for user...");
   try {
     const { eventId } = req.params;
 
@@ -135,13 +137,13 @@ export const getEventDetailsForUser = async (req, res) => {
 
     if (!event) {
       return res.status(404).json({
-        success: false,
+        status: 404,
         message: "Event not found or has been deleted",
       });
     }
 
     res.status(200).json({
-      success: true,
+      status: 200,
       event,
     });
   } catch (error) {

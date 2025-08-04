@@ -32,7 +32,7 @@ const EventBookingSchema = new Schema(
     },
     entryType: {
       type: String,
-      enum: ["stag", "couple", "girl"],
+      enum: ["stag", "couple", "girls"],
       default: "stag",
     },
     bookingStatus: {
@@ -49,29 +49,25 @@ const EventBookingSchema = new Schema(
       type: String,
       required: false,
     },
-    numberOfPeople:{
+    numberOfPeople: {
       type: Number,
       required: true,
       default: 1,
       min: 1,
     },
-    // specialRequests: {
-    //   type: String,
-    //   required: false,
-    //   trim: true,
-    // },
-    createdAt: {
+    date: {
       type: Date,
-      default: Date.now,
+      required: true,
     },
-    updatedAt: {
-      type: Date,
-      default: Date.now,
+    timeSlot: {
+      startTime: { type: String, required: true },
+      endTime: { type: String, required: true },
     },
   },
   {
-    timestamps: true, // adds createdAt and updatedAt automatically
+    timestamps: true,
   }
 );
+
 
 export default mongoose.model("EventBooking", EventBookingSchema);

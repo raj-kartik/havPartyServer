@@ -4,7 +4,7 @@ dotenv.config();
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import { pathToRegexp } from "path-to-regexp";
+import { match } from "path-to-regexp";
 
 import userRoute from "./routes/User/index.js";
 import employeeRoute from "./routes/Partner/index.js";
@@ -12,19 +12,22 @@ import ownerRoute from "./routes/Owner/owner.js";
 import { verifyToken } from "./middlewares/middlware.js";
 import { signInClub } from "./controllers/Signin.js";
 import bookingRoute from "./routes/Booking/bookingEvent.js";
+import offerRoute from "./routes/Offers/offers.js";
+import clubRoute from "./routes/UserClubs/UserClub.js";
 
 const app = express();
 const port = process.env.PORT || 8000;
 
 // ✅ Parse JSON bodies
 app.use(express.json());
+
+// ✅ Setup CORS
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow all origins, including undefined (Postman, curl)
-      callback(null, true);
+      callback(null, true); // Allow all origins including Postman/curl (null origin)
     },
-    credentials: true, // if you ever need to send cookies
+    credentials: true,
   })
 );
 
@@ -59,24 +62,40 @@ const allowedPaths = [
   "/api/v1/owner/employee/details",
   "/api/v1/booking/event",
   "/api/v1/booking/all-event",
-  "/api/v1/booking/event/:eventId",
+  "/api/v1/booking/book-event",
+  "/api/v1/booking/event-detail/:eventId",
+  "/api/v1/offers/get-offers", // user offers list
+  "/api/v1/offers/offer-details/:offerId", // user offers list
+  "/api/v1/clubs/all-clubs",
+  "/api/v1/clubs/club-detail/:clubId"
 ];
 
 // ✅ Helper to match dynamic paths
 const isAllowedPath = (path) => {
   return allowedPaths.some((pattern) => {
-    const regex = pathToRegexp(pattern);
-    return regex instanceof RegExp && regex.test(path);
+    try {
+      const matcher = match(pattern, { decode: decodeURIComponent });
+      const matched = matcher(path);
+      return matched !== false;
+    } catch (err) {
+      console.error(`❌ Error in pattern: ${pattern}`, err);
+      return false;
+    }
   });
 };
 
-// ✅ JWT Middleware (for protected routes)
+// ✅ JWT Middleware (protect routes unless allowed)
 app.use((req, res, next) => {
-  const cleanedPath = req.path.split("?")[0];
-  if (allowedPaths.includes(cleanedPath) || isAllowedPath(cleanedPath)) {
-    return next(); // allow public routes
+  const cleanedPath = req.path;
+  // console.log("🔍 Incoming path:", cleanedPath);
+
+  if (isAllowedPath(cleanedPath)) {
+    // console.log("✅ Public route:", cleanedPath);
+    return next();
   }
-  verifyToken(req, res, next);
+
+  // console.log("🔐 Protected route:", cleanedPath);
+  return verifyToken(req, res, next);
 });
 
 // ✅ Root route
@@ -84,20 +103,22 @@ app.get("/api/v1", (req, res) => {
   res.send("🎉 Hav Party API is running!");
 });
 
-// ✅ Use routes
+// ✅ Register routes
 app.use("/api/v1", userRoute);
 app.use("/api/v1/employee", employeeRoute);
 app.use("/api/v1/owner", ownerRoute);
 app.post("/api/v1/club/signin", signInClub);
 app.use("/api/v1/booking", bookingRoute);
+app.use("/api/v1/offers", offerRoute);
+app.use("/api/v1/clubs", clubRoute);
 
-// ✅ 404 handler
+// ✅ 404 Handler
 app.use((req, res) => {
-  console.log("Unhandled route:", req.method, req.path);
+  console.log("❓ Unhandled route:", req.method, req.path);
   res.status(404).json({ message: "Route not found" });
 });
 
-// ✅ Start server
+// ✅ Start the server
 app.listen(port, () => {
   console.log(`🚀 Server is listening on PORT ${port}`);
 });

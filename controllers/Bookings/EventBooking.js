@@ -65,61 +65,120 @@ export const postUserBookingEvent = async (req, res) => {
   const {
     clubId,
     eventId,
-    amountPaid = 0,
-    paymentStatus = "unpaid",
     entryType = "stag",
     numberOfPeople = 1,
+    date,
+    timeSlot,
     promoterId,
     promoterName,
+    bookingDate,
     user: { name, mobile, email, gender, isAdult = true },
   } = req.body;
 
-  if (!clubId || !eventId || !name || !mobile || !gender || !email) {
+  // Sanitize mobile number
+  const actualMobile = mobile.replace(/\D/g, "").slice(-10);
+  const normalizedGender = gender?.toLowerCase();
+
+  if (
+    !clubId ||
+    !eventId ||
+    !name ||
+    !actualMobile ||
+    !gender ||
+    !email ||
+    !bookingDate ||
+    !date ||
+    !timeSlot?.startTime ||
+    !timeSlot?.endTime
+  ) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
+  // Validate mobile format (Indian 10-digit)
+  if (!/^[6-9]\d{9}$/.test(actualMobile)) {
+    return res.status(400).json({ message: "Invalid mobile number format" });
+  }
+
+  // Validate gender
+  if (!["male", "female", "other"].includes(normalizedGender)) {
+    return res.status(400).json({ message: "Invalid gender value" });
+  }
+
   try {
-    // Check if user exists by email or mobile or both
-    let existingUser = await User.findOne({
-      $or: [{ email }, { mobile }],
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    const formattedDate = new Date(date).toISOString().split("T")[0];
+    const dateEntry = event.dates.find((dateObj) => {
+      const eventDate = new Date(dateObj.date).toISOString().split("T")[0];
+      return eventDate === formattedDate;
     });
 
-    // If not found, create a new user with empty password
+    if (!dateEntry) {
+      return res.status(400).json({ message: "No event on selected date." });
+    }
+
+    const slotExists = dateEntry.timeSlots.some(
+      (slot) =>
+        slot.startTime === timeSlot.startTime &&
+        slot.endTime === timeSlot.endTime
+    );
+
+    if (!slotExists) {
+      return res
+        .status(400)
+        .json({ message: "Invalid time slot for the selected date." });
+    }
+
+    // Find or create user
+    let existingUser = await User.findOne({
+      $or: [{ email }, { mobile: actualMobile }],
+    });
+
     if (!existingUser) {
       existingUser = new User({
         name,
         email,
-        mobile,
-        gender,
+        mobile: actualMobile,
+        gender: normalizedGender,
         isAdult,
-        password: "", // no password, user is guest
+        password: "", // guest user
       });
       await existingUser.save();
     }
 
+    // Create booking
     const booking = new EventBooking({
       clubId,
       userId: existingUser._id,
       eventId,
-      amountPaid,
-      paymentStatus,
+      amountPaid: 0,
+      paymentStatus: "unpaid",
       entryType,
       numberOfPeople,
       promoterId,
       promoterName,
+      date: new Date(date),
+      timeSlot: {
+        startTime: timeSlot.startTime,
+        endTime: timeSlot.endTime,
+      },
     });
 
     await booking.save();
 
-    // Push to user's eventBookings array (optional)
+    // Add booking ID to user
     if (!existingUser.eventsBookings.includes(booking._id)) {
       existingUser.eventsBookings.push(booking._id);
       await existingUser.save();
     }
 
     return res.status(201).json({
-      message: "Booking created successfully",
+      message: "Booking created successfully (Unpaid)",
       data: booking,
+      status: 200,
     });
   } catch (err) {
     console.error("Error posting booking:", err);
@@ -128,6 +187,7 @@ export const postUserBookingEvent = async (req, res) => {
       .json({ message: "Server error", error: err.message });
   }
 };
+
 
 // CLUB + USER
 export const updateUserBookingEvent = async (req, res) => {
@@ -210,7 +270,7 @@ export const getBookingListOfEventToClub = async (req, res) => {
 
     if (type === "owner") {
       const owner = await Owner.findById(id);
-      if (owner?.clubs_owned?.some(club => club.toString() === eventClubId)) {
+      if (owner?.clubs_owned?.some((club) => club.toString() === eventClubId)) {
         isAuthorized = true;
       }
     } else {
@@ -242,6 +302,5 @@ export const getBookingListOfEventToClub = async (req, res) => {
     });
   }
 };
-
 
 // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvd25lcklkIjoiNjg2ZmI3Mjg5MTI4Y2NlMDdmYTQ4ODFmIiwiZW1haWwiOiJyYWprYXJ0aWsxNTlAZ21haWwuY29tIiwiaWF0IjoxNzUzNjg3ODQ4fQ.0l1oA9I8FlH-lueuOjFes69EUra7GWM5bhWP3txXPFE
