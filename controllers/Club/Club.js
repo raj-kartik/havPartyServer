@@ -1,8 +1,11 @@
+import mongoose from "mongoose";
 import Owner from "../../models/Owner/owner.js";
 import ClubReach from "../../models/Partner/Club/clubReach.js";
 import Club, { Offer } from "../../models/Partner/Club/clubSchema.js";
+import DailyRegistration from "../../models/Partner/Club/DailyRegistration.js";
 import Employee from "../../models/Partner/Employee.js";
 import Partner from "../../models/Partner/Employee.js";
+import EventBooking from "../../models/Booking/EventBooking.js";
 // Controller to create a new club
 // This function assumes that the owner is an Owner and the manager is a Partner
 export const createClub = async (req, res) => {
@@ -250,7 +253,8 @@ export const updateManager = async (req, res) => {
 // Controller to add an offer to a specific club
 // This function assumes that the offer is added by a Partner and the club belongs to an Owner
 export const addOfferToClub = async (req, res) => {
-  const { clubId, title, description, discount, validFrom, validUntil, terms } = req.body;
+  const { clubId, title, description, discount, validFrom, validUntil, terms } =
+    req.body;
 
   // Validate required fields
   if (!clubId) {
@@ -265,7 +269,9 @@ export const addOfferToClub = async (req, res) => {
     // Find the club by ID only if it is not deleted
     const club = await Club.findOne({ _id: clubId, isDelete: { $ne: true } });
     if (!club) {
-      return res.status(404).json({ message: "Club not found or has been deleted." });
+      return res
+        .status(404)
+        .json({ message: "Club not found or has been deleted." });
     }
 
     // Create the new offer
@@ -302,11 +308,15 @@ export const bookingClub = async (req, res) => {
 
   // Validate required fields
   if (!userId || !clubId || !bookingDate || !bookingTime) {
-    return res.status(400).json({ message: "All booking fields are required." });
+    return res
+      .status(400)
+      .json({ message: "All booking fields are required." });
   }
 
   if (numberOfPeople <= 0) {
-    return res.status(400).json({ message: "Number of people must be greater than zero." });
+    return res
+      .status(400)
+      .json({ message: "Number of people must be greater than zero." });
   }
 
   try {
@@ -319,7 +329,9 @@ export const bookingClub = async (req, res) => {
 
     // Prevent booking if the club is marked as deleted
     if (club.isDelete) {
-      return res.status(403).json({ message: "This club is no longer available for booking." });
+      return res
+        .status(403)
+        .json({ message: "This club is no longer available for booking." });
     }
 
     // Create the new booking
@@ -396,5 +408,227 @@ export const updateDeleteClub = async (req, res) => {
   } catch (err) {
     console.error("Error updating or deleting club:", err);
     return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+export const getClubStats = async (req, res) => {
+  try {
+    let { clubId, year, month } = req.query;
+    const { type, id } = req.user;
+
+    const currentDate = new Date();
+    year = parseInt(year) || currentDate.getFullYear();
+    month = parseInt(month) || currentDate.getMonth() + 1;
+
+    // Determine clubId
+    if (!clubId) {
+      if (type === "owner") {
+        const owner = await Owner.findById(id);
+        if (!owner || !owner.clubs_owned.length) {
+          return res.status(404).json({ message: "Owner or owned clubs not found" });
+        }
+        clubId = owner.clubs_owned[0]; // First club owned
+      } else if (type === "manager") {
+        const employee = await Employee.findById(id);
+        if (!employee || !employee.club) {
+          return res.status(404).json({ message: "Employee or assigned club not found" });
+        }
+        clubId = employee.club;
+      } else {
+        return res.status(400).json({ message: "Invalid user type" });
+      }
+    }
+
+    const clubObjectId = new mongoose.Types.ObjectId(clubId);
+
+    // ----------------------
+    // Monthly Bookings
+    // ----------------------
+    const monthlyBookings = await EventBooking.aggregate([
+      {
+        $match: {
+          clubId: clubObjectId,
+          $expr: { $eq: [{ $year: "$date" }, year] },
+        },
+      },
+      {
+        $group: {
+          _id: { month: { $month: "$date" } },
+          bookingCount: { $sum: 1 },
+          totalPeople: { $sum: "$numberOfPeople" },
+        },
+      },
+    ]);
+
+    // ----------------------
+    // Monthly Registrations
+    // ----------------------
+    const monthlyRegistrations = await DailyRegistration.aggregate([
+      {
+        $match: {
+          clubId: clubObjectId,
+          year,
+        },
+      },
+      {
+        $group: {
+          _id: { month: "$month" },
+          totalRegistrations: { $sum: "$count" },
+        },
+      },
+    ]);
+
+    // ----------------------
+    // Weekly Bookings
+    // ----------------------
+    const weeklyBookings = await EventBooking.aggregate([
+      {
+        $match: {
+          clubId: clubObjectId,
+          $expr: { $eq: [{ $year: "$date" }, year] },
+        },
+      },
+      {
+        $project: {
+          month: { $month: "$date" },
+          day: { $dayOfMonth: "$date" },
+          numberOfPeople: 1,
+        },
+      },
+      {
+        $addFields: {
+          week: {
+            $switch: {
+              branches: [
+                { case: { $lte: ["$day", 7] }, then: 1 },
+                { case: { $lte: ["$day", 14] }, then: 2 },
+                { case: { $lte: ["$day", 21] }, then: 3 },
+                { case: { $lte: ["$day", 28] }, then: 4 },
+              ],
+              default: 5,
+            },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { month: "$month", week: "$week" },
+          bookingCount: { $sum: 1 },
+          totalPeople: { $sum: "$numberOfPeople" },
+        },
+      },
+    ]);
+
+    // ----------------------
+    // Weekly Registrations
+    // ----------------------
+    const weeklyRegistrations = await DailyRegistration.aggregate([
+      {
+        $match: {
+          clubId: clubObjectId,
+          year,
+        },
+      },
+      {
+        $addFields: {
+          week: {
+            $switch: {
+              branches: [
+                { case: { $lte: ["$day", 7] }, then: 1 },
+                { case: { $lte: ["$day", 14] }, then: 2 },
+                { case: { $lte: ["$day", 21] }, then: 3 },
+                { case: { $lte: ["$day", 28] }, then: 4 },
+              ],
+              default: 5,
+            },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { month: "$month", week: "$week" },
+          totalRegistrations: { $sum: "$count" },
+        },
+      },
+    ]);
+
+    // ----------------------
+    // Helpers
+    // ----------------------
+    const fillMonthlyData = (dataArray, key) =>
+      Array.from({ length: 12 }, (_, index) => {
+        const found = dataArray.find((d) => d._id.month === index + 1);
+        return {
+          month: index + 1,
+          [key]: found?.[key] || 0,
+        };
+      });
+
+    const getWeeklyStructure = () => ({
+      week1: 0,
+      week2: 0,
+      week3: 0,
+      week4: 0,
+      week5: 0,
+    });
+
+    const fillWeeklyData = (weeklyData, key) =>
+      Array.from({ length: 12 }, (_, monthIndex) => {
+        const result = getWeeklyStructure();
+        for (let week = 1; week <= 5; week++) {
+          const match = weeklyData.find(
+            (d) =>
+              d._id.month === monthIndex + 1 &&
+              d._id.week === week
+          );
+          result[`week${week}`] = match?.[key] || 0;
+        }
+        return {
+          month: monthIndex + 1,
+          ...result,
+        };
+      });
+
+    // ----------------------
+    // Final Structured Data
+    // ----------------------
+    const bookings = fillMonthlyData(monthlyBookings, "bookingCount").map(
+      (b, i) => ({
+        ...b,
+        totalPeople:
+          monthlyBookings.find((x) => x._id.month === i + 1)?.totalPeople || 0,
+      })
+    );
+
+    const registrations = fillMonthlyData(monthlyRegistrations, "totalRegistrations");
+
+    const weeklyBookingStats = fillWeeklyData(weeklyBookings, "bookingCount");
+    const weeklyPeopleStats = fillWeeklyData(weeklyBookings, "totalPeople");
+    const weeklyRegistrationStats = fillWeeklyData(weeklyRegistrations, "totalRegistrations");
+
+    const totalBookings = bookings.reduce((sum, b) => sum + b.bookingCount, 0);
+    const totalPeople = bookings.reduce((sum, b) => sum + b.totalPeople, 0);
+    const totalRegistrations = registrations.reduce((sum, r) => sum + r.totalRegistrations, 0);
+
+    return res.status(200).json({
+      clubId,
+      year,
+      month,
+      totalBookings,
+      totalPeople,
+      totalRegistrations,
+      monthly: {
+        bookings,
+        registrations,
+      },
+      weekly: {
+        bookings: weeklyBookingStats,
+        totalPeople: weeklyPeopleStats,
+        registrations: weeklyRegistrationStats,
+      },
+    });
+  } catch (error) {
+    console.error("Error in getClubStats:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
