@@ -6,6 +6,8 @@ import DailyRegistration from "../../models/Partner/Club/DailyRegistration.js";
 import Employee from "../../models/Partner/Employee.js";
 import Partner from "../../models/Partner/Employee.js";
 import EventBooking from "../../models/Booking/EventBooking.js";
+import { getS3ObjectUrl } from "../../utils/awsFunction.js";
+import { Event } from "../../models/Event/EventSchema.js";
 // Controller to create a new club
 // This function assumes that the owner is an Owner and the manager is a Partner
 export const createClub = async (req, res) => {
@@ -150,18 +152,26 @@ export const getAllClub = async (req, res) => {
 
 export const ownerClubDetails = async (req, res) => {
   const { clubId } = req.params;
-  // const { id} = req.user;
+
   if (!clubId) {
     return res.status(400).json({ message: "Club ID is required." });
   }
 
   try {
-    // Get club with owner info
     const club = await Club.findById(clubId).populate("owner", "name email");
 
     if (!club) {
       return res.status(404).json({ message: "Club not found." });
     }
+
+    // Convert club photo keys to signed URLs
+    const photoKeys = club.photos || [];
+    const signedPhotoUrls = await Promise.all(
+      photoKeys.map((key) => getS3ObjectUrl(key))
+    );
+
+    // Replace the photo keys with signed URLs (or add a new field if you want to keep both)
+    club.photos = signedPhotoUrls;
 
     // Get club reach analytics
     const clubReach = await ClubReach.findOne({ clubId });
@@ -171,13 +181,27 @@ export const ownerClubDetails = async (req, res) => {
       .select("name email mobile position profilePicture club")
       .populate("club", "name");
 
-    // Get the partner manager(s)
     const manager = employees.filter(
       (emp) => emp.position?.toLowerCase() === "manager"
     );
 
     // Get all offers for this club with full detail and club name
-    const offers = await Offer.find({ club: clubId }).populate("club", "name");
+    const offers = await Offer.find({ club: clubId, isDelete: false }).populate("club", "name");
+
+    // ✅ Get all events for the club
+    const rawEvents = await Event.find({ clubId, isDelete: false }).populate("clubId", "name");
+
+    const events = await Promise.all(
+      rawEvents.map(async (event) => {
+        const signedImages = await Promise.all(
+          (event.images || []).map((key) => getS3ObjectUrl(key))
+        );
+        return {
+          ...event.toObject(),
+          images: signedImages,
+        };
+      })
+    );
 
     return res.status(200).json({
       message: "Club details fetched successfully.",
@@ -186,7 +210,8 @@ export const ownerClubDetails = async (req, res) => {
       clubReach,
       employees,
       manager,
-      offers, // contains full offer details including populated club name
+      offers,
+      events
     });
   } catch (err) {
     console.error("Error fetching club details:", err);

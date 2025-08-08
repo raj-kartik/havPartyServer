@@ -4,53 +4,79 @@ import Owner from "../../models/Owner/owner.js";
 import Club from "../../models/Partner/Club/clubSchema.js";
 import Employee from "../../models/Partner/Employee.js";
 import User from "../../models/User/userSchema.js";
+import { getS3ObjectUrl } from "../../utils/awsFunction.js";
 
 export const getAllEvents = async (req, res) => {
   const { id } = req.user;
 
   try {
-    // Try to find as Owner first
+    // Check if user is Owner
     const owner = await Owner.findById(id).populate("clubs_owned", "_id name");
+
+    let events = [];
+    let role = "";
 
     if (owner && owner.clubs_owned.length > 0) {
       const clubIds = owner.clubs_owned.map((club) => club._id);
 
-      const events = await Event.find({
+      events = await Event.find({
         clubId: { $in: clubIds },
-        isDelete: false, // Exclude soft-deleted events
+        isDelete: false,
       }).populate("clubId", "name");
 
-      return res.status(200).json({
-        role: "owner",
-        events,
-        count: events.length,
-      });
+      role = "owner";
+    } else {
+      // Try Employee
+      const employee = await Employee.findById(id).populate("club", "_id name");
+
+      if (!employee) {
+        return res
+          .status(404)
+          .json({ message: "User not found as Owner or Employee" });
+      }
+
+      if (employee.position !== "Manager") {
+        return res.status(403).json({
+          message: "Only Managers can fetch events",
+        });
+      }
+
+      events = await Event.find({
+        clubId: employee.club._id,
+        isDelete: false,
+      }).populate("clubId", "name");
+
+      role = "employee";
     }
 
-    // If not found as Owner, try as Employee
-    const employee = await Employee.findById(id).populate("club", "_id name position");
+    // Generate signed URL for first image of each event
+    const enrichedEvents = await Promise.all(
+      events.map(async (event) => {
+        const eventObj = event.toObject();
 
-    if (!employee) {
-      return res
-        .status(404)
-        .json({ message: "User not found as Owner or Employee" });
-    }
+        if (eventObj.images && eventObj.images.length > 0) {
+          // console.log("---- seventObj.images[0] -----", eventObj.images[0]);
+          try {
+            const signedUrl = await getS3ObjectUrl(eventObj.images[0]);
 
-    if (employee.position !== "Manager") {
-      return res
-        .status(403)
-        .json({ message: "Only Managers can fetch events" });
-    }
+            eventObj.imageUrl = signedUrl;
+            // console.log("---- eventObj.imageUrl -----", eventObj.imageUrl);
+          } catch (err) {
+            console.error("Error generating image URL", err);
+            eventObj.imageUrl = null;
+          }
+        } else {
+          eventObj.imageUrl = null;
+        }
 
-    const events = await Event.find({
-      clubId: employee.club._id,
-      isDelete: false, // Exclude soft-deleted events
-    }).populate("clubId", "name");
+        return eventObj;
+      })
+    );
 
     return res.status(200).json({
-      role: "employee",
-      events,
-      count: events.length,
+      role,
+      events: enrichedEvents,
+      count: enrichedEvents.length,
     });
   } catch (err) {
     console.error(err);
@@ -96,13 +122,36 @@ export const getEventDetails = async (req, res) => {
       return res.status(404).json({ message: "Event not found" });
     }
 
+    // Generate signed image URLs
+    const eventObj = event.toObject();
+    if (eventObj.images && eventObj.images.length > 0) {
+      try {
+        const signedImageUrls = await Promise.all(
+          eventObj.images.map(async (key) => {
+            try {
+              return await getS3ObjectUrl(key);
+            } catch (err) {
+              console.error("Error generating signed URL for image:", key);
+              return null;
+            }
+          })
+        );
+        eventObj.signedImages = signedImageUrls;
+      } catch (error) {
+        console.error("Failed to generate signed URLs for images", error);
+        eventObj.signedImages = [];
+      }
+    } else {
+      eventObj.signedImages = [];
+    }
+
     // Get all event bookings
     const bookings = await EventBooking.find({ eventId });
 
     // Enrich each booking with user details
     const bookingsWithUser = await Promise.all(
       bookings.map(async (booking) => {
-        const user = await User.findById(booking.userId).select("-password"); // exclude sensitive info
+        const user = await User.findById(booking.userId).select("-password");
         return {
           ...booking.toObject(),
           user,
@@ -111,7 +160,7 @@ export const getEventDetails = async (req, res) => {
     );
 
     return res.status(200).json({
-      event,
+      event: eventObj,
       bookings: bookingsWithUser,
     });
   } catch (error) {
@@ -188,11 +237,9 @@ export const deleteEvent = async (req, res) => {
 
   // Ensure user is authenticated and has the correct role
   if (!user || (user.type !== "owner" && user.type !== "manager")) {
-    return res
-      .status(403)
-      .json({
-        message: "Unauthorized. Only owners or managers can delete events.",
-      });
+    return res.status(403).json({
+      message: "Unauthorized. Only owners or managers can delete events.",
+    });
   }
 
   if (!eventId) {
@@ -215,12 +262,10 @@ export const deleteEvent = async (req, res) => {
     event.isDelete = true;
     await event.save();
 
-    return res
-      .status(200)
-      .json({
-        message: "Event deleted successfully (soft delete).",
-        status: 200,
-      });
+    return res.status(200).json({
+      message: "Event deleted successfully (soft delete).",
+      status: 200,
+    });
   } catch (error) {
     console.error("Error deleting event:", error);
     return res.status(500).json({ message: "Internal server error." });

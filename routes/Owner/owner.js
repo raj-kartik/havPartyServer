@@ -4,6 +4,7 @@ import { addEmployee, getEmployee, getEmployeeDetails } from "../../controllers/
 import { createClub, getAllClub, getClubStats, ownerClubDetails, updateDeleteClub, updateManager } from "../../controllers/Club/Club.js";
 import { getOffersByClub, OfferCreatedByClubers, putDeleteOffer, updateOffer } from "../../controllers/Offers/OwnerOffer.js";
 import transactions from './Transaction/transaction.js'
+import awsRoute from "../aws/aws.js"
 import events from '../Events/events.js'
 const router = express.Router();
 
@@ -39,6 +40,9 @@ router.put("/club/delete-offer", putDeleteOffer); // Assuming updateOffer is def
 // transactions
 router.use("/transaction", transactions);
 router.use("/events",events)
+
+// aws uploading 
+router.use("/aws",awsRoute);
 
 
 export default router;

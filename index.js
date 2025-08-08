@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
-
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -14,6 +14,8 @@ import { signInClub } from "./controllers/Signin.js";
 import bookingRoute from "./routes/Booking/bookingEvent.js";
 import offerRoute from "./routes/Offers/offers.js";
 import clubRoute from "./routes/UserClubs/UserClub.js";
+import awsRoute from  "./routes/aws/aws.js";
+import { getS3ObjectUrl, postS3ClubObject } from "./utils/awsFunction.js";
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -67,8 +69,16 @@ const allowedPaths = [
   "/api/v1/offers/get-offers", // user offers list
   "/api/v1/offers/offer-details/:offerId", // user offers list
   "/api/v1/clubs/all-clubs",
-  "/api/v1/clubs/club-detail/:clubId"
+  "/api/v1/clubs/club-detail/:clubId",
 ];
+
+// ---------------------    AWS set up   -------------------------
+
+// async function callingImage() {
+//   console.log("--- media in the bucket ----", await getS3ObjectUrl("events/uploads/fire.png"));
+// }
+// callingImage();
+// --------------------------------------------------------------------
 
 // ✅ Helper to match dynamic paths
 const isAllowedPath = (path) => {
@@ -111,6 +121,9 @@ app.post("/api/v1/club/signin", signInClub);
 app.use("/api/v1/booking", bookingRoute);
 app.use("/api/v1/offers", offerRoute);
 app.use("/api/v1/clubs", clubRoute);
+
+// for accessing the put aws sdk 
+// app.use("/api/v1/aws",awsRoute);
 
 // ✅ 404 Handler
 app.use((req, res) => {
