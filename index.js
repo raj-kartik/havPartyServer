@@ -70,6 +70,7 @@ const allowedPaths = [
   "/api/v1/offers/offer-details/:offerId", // user offers list
   "/api/v1/clubs/all-clubs",
   "/api/v1/clubs/club-detail/:clubId",
+  "/api/v1/clubs/daily-booking",
 ];
 
 // ---------------------    AWS set up   -------------------------
@@ -114,13 +115,13 @@ app.get("/api/v1", (req, res) => {
 });
 
 // ✅ Register routes
-app.use("/api/v1", userRoute);
-app.use("/api/v1/employee", employeeRoute);
-app.use("/api/v1/owner", ownerRoute);
-app.post("/api/v1/club/signin", signInClub);
-app.use("/api/v1/booking", bookingRoute);
-app.use("/api/v1/offers", offerRoute);
-app.use("/api/v1/clubs", clubRoute);
+app.use("/api/v1", userRoute); // user
+app.use("/api/v1/employee", employeeRoute); // employee
+app.use("/api/v1/owner", ownerRoute); // owner
+app.post("/api/v1/club/signin", signInClub); // sign 
+app.use("/api/v1/booking", bookingRoute); // booking
+app.use("/api/v1/offers", offerRoute); // offers
+app.use("/api/v1/clubs", clubRoute); // club
 
 // for accessing the put aws sdk 
 // app.use("/api/v1/aws",awsRoute);

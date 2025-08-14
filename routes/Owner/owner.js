@@ -6,6 +6,8 @@ import { getOffersByClub, OfferCreatedByClubers, putDeleteOffer, updateOffer } f
 import transactions from './Transaction/transaction.js'
 import awsRoute from "../aws/aws.js"
 import events from '../Events/events.js'
+import userDataRoute from "../Data/ClubUser.js"
+
 const router = express.Router();
 
 // post
@@ -44,5 +46,8 @@ router.use("/events",events)
 // aws uploading 
 router.use("/aws",awsRoute);
 
+
+// user data 
+router.use("/club-user",userDataRoute);
 
 export default router;

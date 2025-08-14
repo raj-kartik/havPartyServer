@@ -13,7 +13,7 @@ const DailyBookingSchema = new Schema({
     ref: "User",
     required: false,
   },
-  timing: {
+  date: {
     type: Date, // Could also use a custom format or string if needed
     required: true,
   },
@@ -33,7 +33,7 @@ const DailyBookingSchema = new Schema({
   },
   bookingStatus: {
     type: String,
-    enum: ["pending", "confirmed", "cancelled", "completed"],
+    enum: ["pending", "booked", "completed"],
     default: "pending",
   },
   bookingType: {
@@ -52,7 +52,7 @@ const DailyBookingSchema = new Schema({
   specialNotes: {
     type: String,
     required: false,
-  }
+  },
 });
 
 export default mongoose.model("DailyBooking", DailyBookingSchema);
