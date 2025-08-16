@@ -1,6 +1,7 @@
 import EventBooking from "../../models/Booking/EventBooking.js";
 import { Event } from "../../models/Event/EventSchema.js";
 import Owner from "../../models/Owner/owner.js";
+import Club from "../../models/Partner/Club/clubSchema.js";
 import Employee from "../../models/Partner/Employee.js";
 import User from "../../models/User/userSchema.js";
 
@@ -188,7 +189,6 @@ export const postUserBookingEvent = async (req, res) => {
   }
 };
 
-
 // CLUB + USER
 export const updateUserBookingEvent = async (req, res) => {
   const { bookingId } = req.params;
@@ -300,6 +300,59 @@ export const getBookingListOfEventToClub = async (req, res) => {
       message: "Server error",
       error: err.message,
     });
+  }
+};
+
+export const patchUpdateBookingByClub = async (req, res) => {
+  const { bookingId } = req.params;
+  const { id, type } = req.user; // logged in user (owner or employee)
+  const updateData = req.body; // fields to patch
+
+  console.log("----- update data -----", updateData);
+
+  try {
+    // Find booking
+    const booking = await EventBooking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    // Find club for this booking
+    const club = await Club.findById(booking?.clubId);
+    if (!club) {
+      return res.status(404).json({ message: "Club not found" });
+    }
+
+    // Authorization check
+    let isAuthorized = false;
+
+    if (type === "owner" && String(club?.owner) === String(id)) {
+      isAuthorized = true;
+    } else if (type !== "owner") {
+      const employee = await Employee.findById(id);
+      if (employee && String(employee?.club) === String(club?._id)) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    // Update booking with partial fields (PATCH)
+    const updatedBooking = await EventBooking.findByIdAndUpdate(
+      bookingId,
+      { $set: updateData },
+      { new: true } // return updated doc
+    );
+
+    return res.status(200).json({
+      message: "Booking updated successfully",
+      booking: updatedBooking,
+    });
+  } catch (err) {
+    console.error("Error in patchUpdateBookingByClub:", err);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 

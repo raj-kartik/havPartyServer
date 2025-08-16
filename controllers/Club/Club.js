@@ -24,6 +24,7 @@ export const createClub = async (req, res) => {
     license,
     openTiming,
     closeTiming,
+    mobile,
   } = req.body;
 
   // Validate required fields
@@ -74,6 +75,7 @@ export const createClub = async (req, res) => {
       license,
       openTiming,
       closeTiming,
+      mobile: mobile || [],
       location: {
         address1: location.address1,
         address2: location.address2 || "",
@@ -186,10 +188,16 @@ export const ownerClubDetails = async (req, res) => {
     );
 
     // Get all offers for this club with full detail and club name
-    const offers = await Offer.find({ club: clubId, isDelete: false }).populate("club", "name");
+    const offers = await Offer.find({ club: clubId, isDelete: false }).populate(
+      "club",
+      "name"
+    );
 
     // ✅ Get all events for the club
-    const rawEvents = await Event.find({ clubId, isDelete: false }).populate("clubId", "name");
+    const rawEvents = await Event.find({ clubId, isDelete: false }).populate(
+      "clubId",
+      "name"
+    );
 
     const events = await Promise.all(
       rawEvents.map(async (event) => {
@@ -211,7 +219,7 @@ export const ownerClubDetails = async (req, res) => {
       employees,
       manager,
       offers,
-      events
+      events,
     });
   } catch (err) {
     console.error("Error fetching club details:", err);
@@ -450,13 +458,17 @@ export const getClubStats = async (req, res) => {
       if (type === "owner") {
         const owner = await Owner.findById(id);
         if (!owner || !owner.clubs_owned.length) {
-          return res.status(404).json({ message: "Owner or owned clubs not found" });
+          return res
+            .status(404)
+            .json({ message: "Owner or owned clubs not found" });
         }
         clubId = owner.clubs_owned[0]; // First club owned
       } else if (type === "manager") {
         const employee = await Employee.findById(id);
         if (!employee || !employee.club) {
-          return res.status(404).json({ message: "Employee or assigned club not found" });
+          return res
+            .status(404)
+            .json({ message: "Employee or assigned club not found" });
         }
         clubId = employee.club;
       } else {
@@ -602,9 +614,7 @@ export const getClubStats = async (req, res) => {
         const result = getWeeklyStructure();
         for (let week = 1; week <= 5; week++) {
           const match = weeklyData.find(
-            (d) =>
-              d._id.month === monthIndex + 1 &&
-              d._id.week === week
+            (d) => d._id.month === monthIndex + 1 && d._id.week === week
           );
           result[`week${week}`] = match?.[key] || 0;
         }
@@ -625,15 +635,24 @@ export const getClubStats = async (req, res) => {
       })
     );
 
-    const registrations = fillMonthlyData(monthlyRegistrations, "totalRegistrations");
+    const registrations = fillMonthlyData(
+      monthlyRegistrations,
+      "totalRegistrations"
+    );
 
     const weeklyBookingStats = fillWeeklyData(weeklyBookings, "bookingCount");
     const weeklyPeopleStats = fillWeeklyData(weeklyBookings, "totalPeople");
-    const weeklyRegistrationStats = fillWeeklyData(weeklyRegistrations, "totalRegistrations");
+    const weeklyRegistrationStats = fillWeeklyData(
+      weeklyRegistrations,
+      "totalRegistrations"
+    );
 
     const totalBookings = bookings.reduce((sum, b) => sum + b.bookingCount, 0);
     const totalPeople = bookings.reduce((sum, b) => sum + b.totalPeople, 0);
-    const totalRegistrations = registrations.reduce((sum, r) => sum + r.totalRegistrations, 0);
+    const totalRegistrations = registrations.reduce(
+      (sum, r) => sum + r.totalRegistrations,
+      0
+    );
 
     return res.status(200).json({
       clubId,
@@ -654,6 +673,8 @@ export const getClubStats = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in getClubStats:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };

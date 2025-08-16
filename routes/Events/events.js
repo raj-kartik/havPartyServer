@@ -1,6 +1,6 @@
 import express from "express"
 import { deleteEvent, getAllEvents, getEventDetails, postCreateEvent } from "../../controllers/Events/ClubEvents.js";
-import { getBookingListOfEventToClub } from "../../controllers/Bookings/EventBooking.js";
+import { getBookingListOfEventToClub, patchUpdateBookingByClub } from "../../controllers/Bookings/EventBooking.js";
 
 const router = express.Router();
 
@@ -12,5 +12,6 @@ router.get("/get-event-details/:eventId", getEventDetails);
 
 // club
 router.get("/booking-event-user/:eventId",getBookingListOfEventToClub)
+router.patch("/booking-update/:bookingId",patchUpdateBookingByClub);
 
 export default router;
