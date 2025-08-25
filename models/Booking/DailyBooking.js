@@ -26,14 +26,14 @@ const DailyBookingSchema = new Schema({
     type: String,
     required: false,
   },
-  promotorId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Promotor", // adjust based on your schema
-    required: false,
-  },
+  // promotorId: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: "Promotor", // adjust based on your schema
+  //   required: false,
+  // },
   bookingStatus: {
     type: String,
-    enum: ["pending", "booked", "completed"],
+    enum: ["pending", "booked", "checked-in"],
     default: "pending",
   },
   bookingType: {

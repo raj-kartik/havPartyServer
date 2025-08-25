@@ -159,7 +159,8 @@ export const getUserDetailForClub = async (req, res) => {
       timing: b.timing,
       numOfCustomer: b.numOfCustomer,
       bookingStatus: b.bookingStatus,
-      bookingType: b.bookingType
+      bookingType: b.bookingType,
+      date:b?.date,
     }));
 
     // Step 4: Fetch user details
