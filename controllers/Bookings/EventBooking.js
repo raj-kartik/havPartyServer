@@ -212,9 +212,10 @@ export const updateUserBookingEvent = async (req, res) => {
 
     const updatedBooking = await existingBooking.save();
 
-    return res.status(200).json({
+    return res.status(201).json({
       message: "Booking updated successfully",
       data: updatedBooking,
+      status:201
     });
   } catch (err) {
     console.error("Error updating booking:", err);
@@ -308,7 +309,7 @@ export const patchUpdateBookingByClub = async (req, res) => {
   const { id, type } = req.user; // logged in user (owner or employee)
   const updateData = req.body; // fields to patch
 
-  console.log("----- update data -----", updateData);
+  // console.log("----- update data -----", updateData);
 
   try {
     // Find booking
@@ -346,9 +347,10 @@ export const patchUpdateBookingByClub = async (req, res) => {
       { new: true } // return updated doc
     );
 
-    return res.status(200).json({
+    return res.status(201).json({
       message: "Booking updated successfully",
       booking: updatedBooking,
+      status:201
     });
   } catch (err) {
     console.error("Error in patchUpdateBookingByClub:", err);

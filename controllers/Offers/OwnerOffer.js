@@ -10,6 +10,8 @@ export const OfferCreatedByClubers = async (req, res) => {
   try {
     const { clubId, offerDetails, ownerId, managerId } = req.body;
 
+    console.log("------ id ------", managerId);
+
     // Validate top-level fields
     const missingTopFields = validateRequiredFields(["clubId"], req.body);
     if (missingTopFields.length) {

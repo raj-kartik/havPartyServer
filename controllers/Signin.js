@@ -10,7 +10,7 @@ export const signInClub = async (req, res) => {
     return res.status(400).json({ message: "Mobile number and password are required" });
   }
 
-  console.log("--- mobile",mobile,"and password ----" ,password)
+  // console.log("--- mobile",mobile,"and password ----" ,password)
 
   try {
     // Step 1: Try to find Owner

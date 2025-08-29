@@ -2,12 +2,12 @@ import mongoose from "mongoose";
 import Owner from "../../models/Owner/owner.js";
 import ClubReach from "../../models/Partner/Club/clubReach.js";
 import Club, { Offer } from "../../models/Partner/Club/clubSchema.js";
-import DailyRegistration from "../../models/Partner/Club/DailyRegistration.js";
 import Employee from "../../models/Partner/Employee.js";
 import Partner from "../../models/Partner/Employee.js";
 import EventBooking from "../../models/Booking/EventBooking.js";
 import { getS3ObjectUrl } from "../../utils/awsFunction.js";
 import { Event } from "../../models/Event/EventSchema.js";
+import DailyBooking from "../../models/Booking/DailyBooking.js";
 // Controller to create a new club
 // This function assumes that the owner is an Owner and the manager is a Partner
 export const createClub = async (req, res) => {
@@ -444,237 +444,120 @@ export const updateDeleteClub = async (req, res) => {
   }
 };
 
+// --- Helpers ---
+
 export const getClubStats = async (req, res) => {
   try {
-    let { clubId, year, month } = req.query;
-    const { type, id } = req.user;
+    const { filter = "daily", month, year, clubId } = req.query;
 
-    const currentDate = new Date();
-    year = parseInt(year) || currentDate.getFullYear();
-    month = parseInt(month) || currentDate.getMonth() + 1;
+    if (!clubId) return res.status(400).json({ error: "clubId is required" });
 
-    // Determine clubId
-    if (!clubId) {
-      if (type === "owner") {
-        const owner = await Owner.findById(id);
-        if (!owner || !owner.clubs_owned.length) {
-          return res
-            .status(404)
-            .json({ message: "Owner or owned clubs not found" });
-        }
-        clubId = owner.clubs_owned[0]; // First club owned
-      } else if (type === "manager") {
-        const employee = await Employee.findById(id);
-        if (!employee || !employee.club) {
-          return res
-            .status(404)
-            .json({ message: "Employee or assigned club not found" });
-        }
-        clubId = employee.club;
-      } else {
-        return res.status(400).json({ message: "Invalid user type" });
-      }
+    const selectedYear = year ? parseInt(year) : new Date().getFullYear();
+    const selectedMonth = month ? parseInt(month) - 1 : new Date().getMonth();
+
+    let startDate, endDate, groupFormat, groupFormatter, labels = [];
+
+    if (filter === "daily") {
+      startDate = new Date(selectedYear, selectedMonth, 1);
+      endDate = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59);
+      groupFormat = { $dayOfMonth: "$date" };
+      groupFormatter = (id) => `Day ${id}`;
+
+      const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+      labels = Array.from({ length: daysInMonth }, (_, i) => groupFormatter(i + 1));
+
+    } else if (filter === "monthly") {
+      startDate = new Date(selectedYear, selectedMonth, 1);
+      endDate = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59);
+      groupFormat = {
+        $ceil: { $divide: [{ $dayOfMonth: "$date" }, 7] }, // Week 1, 2, 3, 4 of month
+      };
+      groupFormatter = (id) => `Week ${id}`;
+
+      const weeksInMonth = Math.ceil(endDate.getDate() / 7);
+      labels = Array.from({ length: weeksInMonth }, (_, i) => groupFormatter(i + 1));
+
+    } else if (filter === "yearly") {
+      startDate = new Date(selectedYear, 0, 1);
+      endDate = new Date(selectedYear + 1, 0, 0, 23, 59, 59);
+      groupFormat = { $month: "$date" };
+
+      const monthsArr = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      groupFormatter = (id) => monthsArr[id - 1];
+      labels = monthsArr;
     }
 
-    const clubObjectId = new mongoose.Types.ObjectId(clubId);
-
-    // ----------------------
-    // Monthly Bookings
-    // ----------------------
-    const monthlyBookings = await EventBooking.aggregate([
+    // ---- EventBooking Stats ----
+    const eventBookingStatsRaw = await EventBooking.aggregate([
       {
-        $match: {
-          clubId: clubObjectId,
-          $expr: { $eq: [{ $year: "$date" }, year] },
-        },
+        $match: { clubId: new mongoose.Types.ObjectId(clubId), date: { $gte: startDate, $lte: endDate } }
       },
       {
         $group: {
-          _id: { month: { $month: "$date" } },
-          bookingCount: { $sum: 1 },
-          totalPeople: { $sum: "$numberOfPeople" },
+          _id: groupFormat,
+          total: { $sum: 1 },
+          pending: { $sum: { $cond: [{ $eq: ["$bookingStatus", "pending"] }, 1, 0] } },
+          confirmed: { $sum: { $cond: [{ $eq: ["$bookingStatus", "confirmed"] }, 1, 0] } },
+          cancelled: { $sum: { $cond: [{ $eq: ["$bookingStatus", "cancelled"] }, 1, 0] } },
+          checkedIn: { $sum: { $cond: [{ $eq: ["$bookingStatus", "checked-in"] }, 1, 0] } },
         },
       },
+      { $sort: { _id: 1 } },
     ]);
 
-    // ----------------------
-    // Monthly Registrations
-    // ----------------------
-    const monthlyRegistrations = await DailyRegistration.aggregate([
+    // ---- DailyBooking Stats ----
+    const dailyBookingStatsRaw = await DailyBooking.aggregate([
       {
-        $match: {
-          clubId: clubObjectId,
-          year,
-        },
+        $match: { clubId: new mongoose.Types.ObjectId(clubId), date: { $gte: startDate, $lte: endDate } }
       },
       {
         $group: {
-          _id: { month: "$month" },
-          totalRegistrations: { $sum: "$count" },
+          _id: groupFormat,
+          total: { $sum: 1 },
+          booked: { $sum: { $cond: [{ $eq: ["$bookingStatus", "booked"] }, 1, 0] } },
+          pending: { $sum: { $cond: [{ $eq: ["$bookingStatus", "pending"] }, 1, 0] } },
+          checkedIn: { $sum: { $cond: [{ $eq: ["$bookingStatus", "checked-in"] }, 1, 0] } },
         },
       },
+      { $sort: { _id: 1 } },
     ]);
 
-    // ----------------------
-    // Weekly Bookings
-    // ----------------------
-    const weeklyBookings = await EventBooking.aggregate([
-      {
-        $match: {
-          clubId: clubObjectId,
-          $expr: { $eq: [{ $year: "$date" }, year] },
-        },
-      },
-      {
-        $project: {
-          month: { $month: "$date" },
-          day: { $dayOfMonth: "$date" },
-          numberOfPeople: 1,
-        },
-      },
-      {
-        $addFields: {
-          week: {
-            $switch: {
-              branches: [
-                { case: { $lte: ["$day", 7] }, then: 1 },
-                { case: { $lte: ["$day", 14] }, then: 2 },
-                { case: { $lte: ["$day", 21] }, then: 3 },
-                { case: { $lte: ["$day", 28] }, then: 4 },
-              ],
-              default: 5,
-            },
-          },
-        },
-      },
-      {
-        $group: {
-          _id: { month: "$month", week: "$week" },
-          bookingCount: { $sum: 1 },
-          totalPeople: { $sum: "$numberOfPeople" },
-        },
-      },
-    ]);
-
-    // ----------------------
-    // Weekly Registrations
-    // ----------------------
-    const weeklyRegistrations = await DailyRegistration.aggregate([
-      {
-        $match: {
-          clubId: clubObjectId,
-          year,
-        },
-      },
-      {
-        $addFields: {
-          week: {
-            $switch: {
-              branches: [
-                { case: { $lte: ["$day", 7] }, then: 1 },
-                { case: { $lte: ["$day", 14] }, then: 2 },
-                { case: { $lte: ["$day", 21] }, then: 3 },
-                { case: { $lte: ["$day", 28] }, then: 4 },
-              ],
-              default: 5,
-            },
-          },
-        },
-      },
-      {
-        $group: {
-          _id: { month: "$month", week: "$week" },
-          totalRegistrations: { $sum: "$count" },
-        },
-      },
-    ]);
-
-    // ----------------------
-    // Helpers
-    // ----------------------
-    const fillMonthlyData = (dataArray, key) =>
-      Array.from({ length: 12 }, (_, index) => {
-        const found = dataArray.find((d) => d._id.month === index + 1);
-        return {
-          month: index + 1,
-          [key]: found?.[key] || 0,
-        };
-      });
-
-    const getWeeklyStructure = () => ({
-      week1: 0,
-      week2: 0,
-      week3: 0,
-      week4: 0,
-      week5: 0,
+    // ---- Map results ----
+    const eventStatsMap = {};
+    eventBookingStatsRaw.forEach(stat => {
+      eventStatsMap[groupFormatter(stat._id)] = stat;
     });
 
-    const fillWeeklyData = (weeklyData, key) =>
-      Array.from({ length: 12 }, (_, monthIndex) => {
-        const result = getWeeklyStructure();
-        for (let week = 1; week <= 5; week++) {
-          const match = weeklyData.find(
-            (d) => d._id.month === monthIndex + 1 && d._id.week === week
-          );
-          result[`week${week}`] = match?.[key] || 0;
-        }
-        return {
-          month: monthIndex + 1,
-          ...result,
-        };
-      });
-
-    // ----------------------
-    // Final Structured Data
-    // ----------------------
-    const bookings = fillMonthlyData(monthlyBookings, "bookingCount").map(
-      (b, i) => ({
-        ...b,
-        totalPeople:
-          monthlyBookings.find((x) => x._id.month === i + 1)?.totalPeople || 0,
-      })
-    );
-
-    const registrations = fillMonthlyData(
-      monthlyRegistrations,
-      "totalRegistrations"
-    );
-
-    const weeklyBookingStats = fillWeeklyData(weeklyBookings, "bookingCount");
-    const weeklyPeopleStats = fillWeeklyData(weeklyBookings, "totalPeople");
-    const weeklyRegistrationStats = fillWeeklyData(
-      weeklyRegistrations,
-      "totalRegistrations"
-    );
-
-    const totalBookings = bookings.reduce((sum, b) => sum + b.bookingCount, 0);
-    const totalPeople = bookings.reduce((sum, b) => sum + b.totalPeople, 0);
-    const totalRegistrations = registrations.reduce(
-      (sum, r) => sum + r.totalRegistrations,
-      0
-    );
-
-    return res.status(200).json({
-      clubId,
-      year,
-      month,
-      totalBookings,
-      totalPeople,
-      totalRegistrations,
-      monthly: {
-        bookings,
-        registrations,
-      },
-      weekly: {
-        bookings: weeklyBookingStats,
-        totalPeople: weeklyPeopleStats,
-        registrations: weeklyRegistrationStats,
-      },
+    const bookingStatsMap = {};
+    dailyBookingStatsRaw.forEach(stat => {
+      bookingStatsMap[groupFormatter(stat._id)] = stat;
     });
+
+    // ---- Fill gaps with 0 ----
+    const emptyEvent = { total: 0, pending: 0, confirmed: 0, cancelled: 0, checkedIn: 0 };
+    const emptyBooking = { total: 0, booked: 0, pending: 0, checkedIn: 0 };
+
+    const eventStats = {};
+    const bookingStats = {};
+    labels.forEach(label => {
+      eventStats[label] = eventStatsMap[label] || { _id: label, ...emptyEvent };
+      bookingStats[label] = bookingStatsMap[label] || { _id: label, ...emptyBooking };
+    });
+
+    return res.json({
+      filter,
+      year: selectedYear,
+      month: selectedMonth + 1,
+      eventStats,
+      bookingStats,
+    });
+
   } catch (error) {
-    console.error("Error in getClubStats:", error);
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    console.error("Error fetching club stats:", error);
+    res.status(500).json({ error: "Error fetching club stats", details: error.message });
   }
 };
+

@@ -190,7 +190,7 @@ export const postCreateEvent = async (req, res) => {
       if (!owner) {
         return res.status(400).json({ message: "Invalid owner ID" });
       }
-    } else if (createdByModel === "employee") {
+    } else if (createdByModel === "manager") {
       const employee = await Employee.findById(createdBy);
       if (!employee || employee.position.toLowerCase() !== "manager") {
         return res

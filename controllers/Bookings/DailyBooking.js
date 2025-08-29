@@ -183,10 +183,12 @@ export const patchDailyStatus = async (req, res) => {
       }
     } else if (type.toLowerCase() === "manager") {
       // get employee and verify assigned club
-      const employee = await Employee.findById(id).select("clubId");
+      const employee = await Employee.findById(id).select("club");
       if (!employee) {
         return res.status(404).json({ message: "Employee not found" });
       }
+
+      // console.log("---- employee ----", employee)
 
       if (employee?.club.toString() !== booking.clubId.toString()) {
         return res
